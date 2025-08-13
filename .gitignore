@@ -416,3 +416,12 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# vcpkg build output
+vcpkg_installed/
+build/
+out/
+
+# Visual Studio files
+*.vcxproj.user
+*.vs/

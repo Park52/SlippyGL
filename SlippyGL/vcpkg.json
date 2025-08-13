@@ -1,0 +1,14 @@
+{
+  "name": "slippygl",
+  "version-string": "0.1.0",
+  "dependencies": [
+    { "name": "curl", "default-features": false, "features": ["openssl", "http2"] },
+    "openssl",
+    "spdlog",
+    "nlohmann-json",
+    "glfw3",
+    "glad",
+    "glm",
+    "stb"
+  ]
+}
