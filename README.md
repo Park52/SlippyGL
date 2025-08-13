@@ -35,3 +35,35 @@ render/ # OpenGL 렌더링
 map/ # 카메라, 가시 타일 계산
 tile/ # 타일 수명 관리
 ui/ # 입력 처리 및 HUD
+
+
+---
+
+## 🛠 개발 환경
+- **언어:** C++17 이상
+- **빌드:** Visual Studio 2022 (MSBuild)
+- **패키지 관리:** [vcpkg](https://github.com/microsoft/vcpkg) 매니페스트 모드
+- **외부 라이브러리:**
+  - curl[openssl], openssl
+  - spdlog
+  - nlohmann-json
+  - glfw3
+  - glad
+  - glm
+  - stb
+
+---
+
+## ⚙️ 빌드 방법
+1. [vcpkg](https://github.com/microsoft/vcpkg) 설치 후 Visual Studio 2022에 통합  
+2. 레포 루트에 `vcpkg.json` 확인  
+3. 프로젝트 속성 → **vcpkg** → Use vcpkg Manifest = Yes, Triplet = x64-windows  
+4. 빌드(F5) 실행
+
+---
+
+## 📜 라이선스
+- 코드: MIT License
+- 지도 데이터 및 타일: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL)
+
+---
