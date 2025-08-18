@@ -64,7 +64,7 @@ public:
 	}
 
 	// 월드 픽셀 → 타일 인덱스
-	static constexpr int32_t pxToTile(const double px, const int32_t tileSize = WebMercator::kTileSize) noexcept
+	static inline int32_t pxToTile(const double px, const int32_t tileSize = WebMercator::kTileSize) noexcept
 	{
 		return static_cast<int32_t>(std::floor(px / static_cast<double>(tileSize)));
 	}
