@@ -38,5 +38,17 @@
     <ClInclude Include="src\core\Types.hpp">
       <Filter>Source Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\net\CurlHandle.hpp">
+      <Filter>Source Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\HttpClient.hpp">
+      <Filter>Source Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\HttpTypes.hpp">
+      <Filter>Source Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\TileEndpoint.hpp">
+      <Filter>Source Files\net</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

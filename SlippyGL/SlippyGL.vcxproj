@@ -141,6 +141,10 @@
   <ItemGroup>
     <ClInclude Include="src\core\TileMath.hpp" />
     <ClInclude Include="src\core\Types.hpp" />
+    <ClInclude Include="src\net\CurlHandle.hpp" />
+    <ClInclude Include="src\net\HttpClient.hpp" />
+    <ClInclude Include="src\net\HttpTypes.hpp" />
+    <ClInclude Include="src\net\TileEndpoint.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
