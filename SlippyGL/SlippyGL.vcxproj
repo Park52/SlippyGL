@@ -137,10 +137,18 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\core\Types.cpp" />
+    <ClCompile Include="src\net\CurlHandle.cpp" />
+    <ClCompile Include="src\net\HttpClient.cpp" />
+    <ClCompile Include="src\net\HttpTypes.cpp" />
+    <ClCompile Include="src\net\TileEndpoint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\TileMath.hpp" />
     <ClInclude Include="src\core\Types.hpp" />
+    <ClInclude Include="src\net\CurlHandle.hpp" />
+    <ClInclude Include="src\net\HttpClient.hpp" />
+    <ClInclude Include="src\net\HttpTypes.hpp" />
+    <ClInclude Include="src\net\TileEndpoint.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
