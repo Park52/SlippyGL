@@ -52,7 +52,7 @@ public:
 	static inline double latToYpx(const double latDeg, const int32_t z, const int32_t tileSize = WebMercator::kTileSize) noexcept
 	{
 		constexpr double kPi = 3.14159265358979323846;
-		const double clampedLat = std::clamp(latDeg, WebMercator::kMinLatDeg, WebMercator::kMaxLatDeg);
+		const double clampedLat = WebMercator::clampLat(latDeg);
 		const double phi = clampedLat * kPi / 180.0;
 		const double world = static_cast<double>(worldSizePx(z, tileSize));
 		const double s = std::tan(phi) + 1.0 / std::cos(phi); // tanφ + secφ
