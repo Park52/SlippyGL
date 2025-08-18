@@ -30,6 +30,18 @@
     <ClCompile Include="src\core\Types.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\net\CurlHandle.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\HttpClient.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\HttpTypes.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\TileEndpoint.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\TileMath.hpp">

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "HttpTypes.hpp"
 #include "CurlHandle.hpp"
 #include <memory>

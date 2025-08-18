@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include "../core/Types.hpp"  // TileID
 
@@ -14,8 +14,8 @@ public:
     const std::string& baseUrl() const noexcept { return baseUrl_; }
     TileEndpoint& setBaseUrl(std::string v) noexcept { baseUrl_ = std::move(v); return *this; }
 
-    std::string rasterUrl(const slippygl::core::TileID& id) const; // z/x/y.png
-    std::string mvtUrl(const slippygl::core::TileID& id) const;    // z/x/y.mvt or .pbf (미래)
+    std::string rasterUrl(const slippygl::core::TileID& id) const noexcept; // z/x/y.png
+    std::string mvtUrl(const slippygl::core::TileID& id) const noexcept;    // z/x/y.mvt or .pbf (미래)
 
 private:
     std::string baseUrl_;

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <vector>
 #include <optional>
@@ -44,8 +44,8 @@ private:
 
 class RequestHeaders {
 public:
-    RequestHeaders& add(std::string key, std::string val);
-    RequestHeaders& addRaw(std::string line);
+    RequestHeaders& add(const std::string& key, const std::string& val);
+    RequestHeaders& addRaw(const std::string& line);
     const std::vector<std::string>& items() const noexcept { return items_; }
     void clear() noexcept { items_.clear(); }
 private:
