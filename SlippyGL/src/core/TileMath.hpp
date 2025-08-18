@@ -56,7 +56,11 @@ public:
 		const double phi = clampedLat * kPi / 180.0;
 		const double world = static_cast<double>(worldSizePx(z, tileSize));
 		const double s = std::tan(phi) + 1.0 / std::cos(phi); // tanφ + secφ
-		return (1.0 - std::log(s) / kPi) * 0.5 * world;
+		const double clampedLat = std::clamp(latDeg, WebMercator::kMinLatDeg, WebMercator::kMaxLatDeg);
+		const double phi = clampedLat * M_PI / 180.0;
+		const double world = static_cast<double>(worldSizePx(z, tileSize));
+		const double s = std::tan(phi) + 1.0 / std::cos(phi); // tanφ + secφ
+		return (1.0 - std::log(s) / M_PI) * 0.5 * world;
 	}
 
 	// 월드 픽셀 → 타일 인덱스
