@@ -2,7 +2,7 @@
   "name": "slippygl",
   "version-string": "0.1.0",
   "dependencies": [
-    { "name": "curl", "default-features": false, "features": ["openssl", "http2"] },
+    { "name": "curl", "default-features": false, "features": ["schannel", "http2"] },
     "openssl",
     "spdlog",
     "nlohmann-json",

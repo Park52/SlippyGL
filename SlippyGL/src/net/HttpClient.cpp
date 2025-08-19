@@ -30,6 +30,7 @@ public:
         curl_easy_setopt(easy, CURLOPT_TIMEOUT_MS,        cfg_.totalTimeoutMs());
         curl_easy_setopt(easy, CURLOPT_FOLLOWLOCATION,    cfg_.followRedirects() ? 1L : 0L);
         curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1L);
+        curl_easy_setopt(easy, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
         // 압축 자동 처리(gzip/deflate/br 가능한 경우)
 #ifdef CURLOPT_ACCEPT_ENCODING

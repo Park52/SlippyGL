@@ -1,20 +1,66 @@
-// SlippyGL.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+﻿#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
 
-#include <iostream>
-#include <curl/curl.h>
-int main()
+#include "core/TileMath.hpp"
+#include "core/Types.hpp"
+#include "net/HttpClient.hpp"
+#include "net/TileEndpoint.hpp"
+
+namespace slippygl::smoketest 
 {
-    std::cout << "Hello World!\n";
+	using namespace slippygl::core;
+	using namespace slippygl::net;
+
+	// 슬리피맵 타일을 가져와서 저장하는 간단한 테스트 프로그램
+    void RunSlippyGLTest() 
+    {
+        // 1) 타겟 위치/줌 (서울시청 근처)
+        constexpr double lat = 37.5665;
+        constexpr double lon = 126.9780;
+        constexpr int z = 12;
+
+        // 2) 위경도 -> TileID (우리 함수명/네임스페이스와 일치)
+        const slippygl::core::TileID id = slippygl::core::TileMath::lonlatToTileID(lon, lat, z);
+        std::cout << "[Tile] " << id.toString() << std::endl;
+
+        // 3) URL 생성 (타일 서버 기본값 사용)
+        slippygl::net::TileEndpoint ep;
+        const std::string url = ep.rasterUrl(id);
+        std::cout << "[URL]  " << url << std::endl;
+
+        // 4) HttpClient 설정 및 GET
+        slippygl::net::NetConfig cfg;
+        cfg.setUserAgent("SlippyGL/0.1 (+you@example.com)")
+            .setVerifyTLS(true)
+            .setHttp2(true)
+            .setMaxRetries(2);
+        slippygl::net::HttpClient http(cfg);
+
+        auto resp = http.get(url);
+        std::cout << "[HTTP] status=" << resp.status() << " bytes=" << resp.body().size() << std::endl;
+
+        // 5) 성공 시 파일 저장
+        if ((200 == resp.status()) && (!resp.body().empty())) 
+        {
+            std::ofstream ofs("tile.png", std::ios::binary);
+            const auto& b = resp.body();
+            ofs.write(reinterpret_cast<const char*>(b.data()), static_cast<std::streamsize>(b.size()));
+            ofs.close();
+            std::cout << "[SAVE] tile.png written\n";
+            return;
+        }
+        else 
+        {
+            std::cerr << "[ERROR] fetch failed\n";
+            return;
+        }
+	}
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln fileks
+int main() 
+{
+    slippygl::smoketest::RunSlippyGLTest();
+    return 0;
+}
