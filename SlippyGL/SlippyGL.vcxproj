@@ -135,7 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\app\SlippyGL.cpp" />
     <ClCompile Include="src\core\Types.cpp" />
     <ClCompile Include="src\net\CurlHandle.cpp" />
     <ClCompile Include="src\net\HttpClient.cpp" />

@@ -24,9 +24,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files\app</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\Types.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -41,6 +38,9 @@
     </ClCompile>
     <ClCompile Include="src\net\TileEndpoint.cpp">
       <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\SlippyGL.cpp">
+      <Filter>Source Files\app</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
