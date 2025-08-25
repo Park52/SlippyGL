@@ -2,16 +2,23 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <thread>
+#include <filesystem>
 
 #include "core/TileMath.hpp"
 #include "core/Types.hpp"
 #include "net/HttpClient.hpp"
 #include "net/TileEndpoint.hpp"
+#include "cache/DiskCache.hpp"
+#include "cache/CacheTypes.hpp"
 
 namespace slippygl::smoketest 
 {
+    namespace fs = std::filesystem;
+
 	using namespace slippygl::core;
 	using namespace slippygl::net;
+    using namespace slippygl::cache;
 
 	// 슬리피맵 타일을 가져와서 저장하는 간단한 테스트 프로그램
     void RunSlippyGLTest() 
@@ -57,10 +64,155 @@ namespace slippygl::smoketest
             return;
         }
 	}
+    
+    // ---- helpers ----
+    static std::vector<uint8_t> makeDummyPng(size_t payload = 2048) {
+        static const uint8_t pngSig[8] = { 0x89,'P','N','G',0x0D,0x0A,0x1A,0x0A };
+        std::vector<uint8_t> v;
+        v.insert(v.end(), pngSig, pngSig + 8);
+        v.resize(payload, 0xAB);
+        return v;
+    }
+    static void printOk(bool ok, const char* what) {
+        std::cout << (ok ? "[OK] " : "[FAIL] ") << what << "\n";
+    }
+
+    // ---- scenarios ----
+    bool Smoke_MissSaveHit(DiskCache& cache, const TileID& id) {
+        std::vector<uint8_t> out;
+        bool miss = !cache.loadRaster(id, out);
+        printOk(miss, "initial MISS");
+
+        auto bytes = makeDummyPng(2048);
+        bool saved = cache.saveRaster(id, bytes);
+        printOk(saved, "saveRaster");
+
+        out.clear();
+        bool hit = cache.loadRaster(id, out);
+        bool eq = hit && out == bytes;
+        printOk(eq, "HIT after save (bytes equal)");
+        return miss && saved && eq;
+    }
+
+    bool Smoke_MetaRoundTrip(DiskCache& cache, const TileID& id) {
+        CacheMeta meta;
+        meta.setEtag("\"abcd1234\"")
+            .setLastModified("Mon, 21 Aug 2025 12:34:56 GMT")
+            .setContentType("image/png")
+            .setContentEncoding(std::nullopt)
+            .setContentLength(2048)
+            .touch(static_cast<std::uint64_t>(std::time(nullptr)));
+
+        bool saved = cache.saveMeta(id, meta);
+        printOk(saved, "saveMeta");
+
+        CacheMeta m2;
+        bool loaded = cache.loadMeta(id, m2);
+        bool same =
+            m2.etag() == meta.etag() &&
+            m2.lastModified() == meta.lastModified() &&
+            m2.contentType() == meta.contentType() &&
+            m2.contentEncoding() == meta.contentEncoding() &&
+            m2.contentLength() == meta.contentLength();
+        printOk(loaded && same, "loadMeta equals saved");
+        return saved && loaded && same;
+    }
+
+    bool Smoke_Overwrite(DiskCache& cache, const TileID& id) {
+        auto a = makeDummyPng(1024);
+        auto b = makeDummyPng(4096);
+
+        bool s1 = cache.saveRaster(id, a);
+        printOk(s1, "saveRaster a");
+
+        std::vector<uint8_t> out;
+        bool h1 = cache.loadRaster(id, out) && out == a;
+        printOk(h1, "load a");
+
+        bool s2 = cache.saveRaster(id, b);
+        printOk(s2, "overwrite with b");
+
+        out.clear();
+        bool h2 = cache.loadRaster(id, out) && out == b;
+        printOk(h2, "load b (overwritten)");
+        return s1 && h1 && s2 && h2;
+    }
+
+    bool Smoke_ExistsRemove(DiskCache& cache, const TileID& id) {
+        auto bytes = makeDummyPng(1536);
+        cache.saveRaster(id, bytes);
+
+        bool ex = cache.exists(id);
+        printOk(ex, "exists == true");
+
+        bool rm = cache.remove(id);
+        printOk(rm, "remove(id)");
+
+        std::vector<uint8_t> out;
+        bool miss = !cache.loadRaster(id, out);
+        printOk(miss, "MISS after remove");
+        return ex && rm && miss;
+    }
+
+    bool Smoke_ClearAll(DiskCache& cache, const TileID& id) {
+        auto bytes = makeDummyPng(1024);
+        cache.saveRaster(id, bytes);
+
+        CacheMeta meta;
+        meta.setContentType("image/png").setContentLength(bytes.size());
+        cache.saveMeta(id, meta);
+
+        cache.clearAll();
+        bool ex = cache.exists(id);
+        printOk(!ex, "exists == false after clearAll");
+        return !ex;
+    }
+
+    bool Smoke_Concurrency(DiskCache& cache, const TileID& id) {
+        auto bytes = makeDummyPng(800);
+        auto worker = [&](int /*idx*/) {
+            for (int i = 0; i < 20; ++i) {
+                if (i % 3 == 0) (void)cache.saveRaster(id, bytes);
+                std::vector<uint8_t> tmp;
+                (void)cache.loadRaster(id, tmp);
+            }
+            };
+        std::thread t1(worker, 1), t2(worker, 2), t3(worker, 3);
+        t1.join(); t2.join(); t3.join();
+        printOk(true, "concurrency smoke (no crash)");
+        return true;
+    }
+
+    void RunDiskCacheTest() 
+    {
+        try {
+            fs::path root = fs::current_path() / "temp-cache";
+            std::cout << "[INFO] cache root: " << root.string() << "\n";
+
+            CacheConfig cfg(root.string());
+            DiskCache cache(cfg);
+
+            TileID id(12, 3554, 1609);
+
+            bool ok = true;
+            ok &= Smoke_MissSaveHit(cache, id);
+            ok &= Smoke_MetaRoundTrip(cache, id);
+            ok &= Smoke_Overwrite(cache, id);
+            ok &= Smoke_ExistsRemove(cache, id);
+            ok &= Smoke_ClearAll(cache, id);
+            ok &= Smoke_Concurrency(cache, id);
+
+            std::cout << "\n[RESULT] " << (ok ? "ALL PASS" : "SOME FAILED") << "\n";
+        }
+        catch (const std::exception& ex) {
+            std::cerr << "[EXCEPTION] " << ex.what() << "\n";
+        }
+    }
 }
 
 int main() 
 {
-    slippygl::smoketest::RunSlippyGLTest();
-    return 0;
+    //  slippygl::smoketest::RunSlippyGLTest();
+	slippygl::smoketest::RunDiskCacheTest();
+	return 0;
 }
