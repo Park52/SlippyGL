@@ -136,6 +136,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\app\SlippyGL.cpp" />
+    <ClCompile Include="src\cache\CacheTypes.cpp" />
+    <ClCompile Include="src\cache\DiskCache.cpp" />
     <ClCompile Include="src\core\Types.cpp" />
     <ClCompile Include="src\net\CurlHandle.cpp" />
     <ClCompile Include="src\net\HttpClient.cpp" />
@@ -143,6 +145,8 @@
     <ClCompile Include="src\net\TileEndpoint.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cache\CacheTypes.hpp" />
+    <ClInclude Include="src\cache\DiskCache.hpp" />
     <ClInclude Include="src\core\TileMath.hpp" />
     <ClInclude Include="src\core\Types.hpp" />
     <ClInclude Include="src\net\CurlHandle.hpp" />
