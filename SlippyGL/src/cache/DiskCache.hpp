@@ -42,6 +42,9 @@ private:
     bool ensureParentDir(const std::string& filePath) const noexcept;
     bool atomicWriteFile(const std::string& dstPath, const std::vector<std::uint8_t>& bytes) const noexcept;
     bool atomicWriteText(const std::string& dstPath, const std::string& text) const noexcept;
+    
+    // 락 없이 호출되는 내부 메서드 (이미 락이 획득된 상태에서 호출)
+    bool saveMetaInternal(const slippygl::core::TileID& id, const CacheMeta& meta) noexcept;
 };
 
 } // namespace slippygl::cache

@@ -25,6 +25,9 @@
     <Filter Include="Source Files\cache">
       <UniqueIdentifier>{8f3a5a4e-adbf-4953-a47b-37acf7f4e2ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\tile">
+      <UniqueIdentifier>{bb96faed-2b7d-4d74-b52c-129c46463e5a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Types.cpp">
@@ -51,6 +54,9 @@
     <ClCompile Include="src\cache\DiskCache.cpp">
       <Filter>Source Files\cache</Filter>
     </ClCompile>
+    <ClCompile Include="src\tile\TileDownloader.cpp">
+      <Filter>Source Files\tile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\TileMath.hpp">
@@ -76,6 +82,9 @@
     </ClInclude>
     <ClInclude Include="src\cache\CacheTypes.hpp">
       <Filter>Source Files\cache</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tile\TileDownloader.hpp">
+      <Filter>Source Files\tile</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
