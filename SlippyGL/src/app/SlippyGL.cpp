@@ -11,6 +11,7 @@
 #include "net/TileEndpoint.hpp"
 #include "cache/DiskCache.hpp"
 #include "cache/CacheTypes.hpp"
+#include "tile/TileDownloader.hpp"
 
 namespace slippygl::smoketest 
 {
@@ -19,6 +20,7 @@ namespace slippygl::smoketest
 	using namespace slippygl::core;
 	using namespace slippygl::net;
     using namespace slippygl::cache;
+	using namespace slippygl::tile;
 
 	// 슬리피맵 타일을 가져와서 저장하는 간단한 테스트 프로그램
     void RunSlippyGLTest() 
@@ -208,11 +210,40 @@ namespace slippygl::smoketest
             std::cerr << "[EXCEPTION] " << ex.what() << "\n";
         }
     }
+
+    void RunTileDownloaderTest()
+    {
+        CacheConfig cc((std::filesystem::current_path() / "cache").string());
+        DiskCache disk(cc);
+
+        NetConfig nc;
+        nc.setUserAgent("SlippyGL/0.1 (+you@example.com)").setVerifyTLS(true).setHttp2(true);
+        HttpClient http(nc);
+
+        TileEndpoint ep; // https://tile.openstreetmap.org
+
+        TileDownloader dl(disk, http, ep);
+
+        // 서울 시청 근처 타일
+        const auto id = core::TileMath::lonlatToTileID(126.9780, 37.5665, 12);
+
+        const auto r1 = dl.ensureRaster(id);
+        if (r1.ok()) 
+        {
+            std::ofstream f("tile_dl1.png", std::ios::binary);
+            f.write(reinterpret_cast<const char*>(r1.body.data()), (std::streamsize)r1.body.size());
+        }
+
+        // 조건부 요청 버전(두 번째 호출에 304로 히트 기대)
+        const auto r2 = dl.ensureRasterConditional(id);
+        // r2.code == kNotModified 또는 kHitDisk/Downloaded 중 하나
+    }
 }
 
 int main() 
 {
     //  slippygl::smoketest::RunSlippyGLTest();
-	slippygl::smoketest::RunDiskCacheTest();
+	//  slippygl::smoketest::RunDiskCacheTest();
+	slippygl::smoketest::RunTileDownloaderTest();
 	return 0;
 }

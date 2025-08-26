@@ -56,7 +56,7 @@ namespace slippygl::cache
 		}
 		if (meta.has_value()) 
 		{
-			saveMeta(id, meta.value()); // 메타 저장
+			saveMetaInternal(id, meta.value()); // 내부 메서드 호출 (락 없음)
 		}
 
 		try {
@@ -95,6 +95,12 @@ namespace slippygl::cache
 	bool DiskCache::saveMeta(const slippygl::core::TileID& id, const CacheMeta& meta) noexcept
 	{
 		std::lock_guard<std::mutex> lock(mtx_);
+		return saveMetaInternal(id, meta);
+	}
+
+	bool DiskCache::saveMetaInternal(const slippygl::core::TileID& id, const CacheMeta& meta) noexcept
+	{
+		// 이 메서드는 이미 락이 획득된 상태에서 호출됨 (락 없음)
 		const std::string path = metaPath(id);
 		
 		if (!ensureParentDir(path)) 

@@ -143,6 +143,7 @@
     <ClCompile Include="src\net\HttpClient.cpp" />
     <ClCompile Include="src\net\HttpTypes.cpp" />
     <ClCompile Include="src\net\TileEndpoint.cpp" />
+    <ClCompile Include="src\tile\TileDownloader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\cache\CacheTypes.hpp" />
@@ -153,6 +154,7 @@
     <ClInclude Include="src\net\HttpClient.hpp" />
     <ClInclude Include="src\net\HttpTypes.hpp" />
     <ClInclude Include="src\net\TileEndpoint.hpp" />
+    <ClInclude Include="src\tile\TileDownloader.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
