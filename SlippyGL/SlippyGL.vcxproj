@@ -139,6 +139,7 @@
     <ClCompile Include="src\cache\CacheTypes.cpp" />
     <ClCompile Include="src\cache\DiskCache.cpp" />
     <ClCompile Include="src\core\Types.cpp" />
+    <ClCompile Include="src\decode\PngCodec.cpp" />
     <ClCompile Include="src\net\CurlHandle.cpp" />
     <ClCompile Include="src\net\HttpClient.cpp" />
     <ClCompile Include="src\net\HttpTypes.cpp" />
@@ -150,6 +151,8 @@
     <ClInclude Include="src\cache\DiskCache.hpp" />
     <ClInclude Include="src\core\TileMath.hpp" />
     <ClInclude Include="src\core\Types.hpp" />
+    <ClInclude Include="src\decode\Image.hpp" />
+    <ClInclude Include="src\decode\PngCodec.hpp" />
     <ClInclude Include="src\net\CurlHandle.hpp" />
     <ClInclude Include="src\net\HttpClient.hpp" />
     <ClInclude Include="src\net\HttpTypes.hpp" />

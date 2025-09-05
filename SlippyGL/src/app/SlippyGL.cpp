@@ -12,6 +12,8 @@
 #include "cache/DiskCache.hpp"
 #include "cache/CacheTypes.hpp"
 #include "tile/TileDownloader.hpp"
+#include "decode/Image.hpp"
+#include "decode/PngCodec.hpp"
 
 namespace slippygl::smoketest 
 {
@@ -21,7 +23,7 @@ namespace slippygl::smoketest
 	using namespace slippygl::net;
     using namespace slippygl::cache;
 	using namespace slippygl::tile;
-
+	using namespace slippygl::decode;
 	// 슬리피맵 타일을 가져와서 저장하는 간단한 테스트 프로그램
     void RunSlippyGLTest() 
     {
@@ -238,12 +240,50 @@ namespace slippygl::smoketest
         const auto r2 = dl.ensureRasterConditional(id);
         // r2.code == kNotModified 또는 kHitDisk/Downloaded 중 하나
     }
+    void RunPngCodecTest()
+    {
+		// 의존 준비(간단 예)
+		cache::CacheConfig cc((std::filesystem::current_path() / "cache").string());
+		cache::DiskCache disk(cc);
+
+		net::NetConfig nc;
+		nc.setUserAgent("SlippyGL/0.1 (+you@example.com)").setVerifyTLS(true).setHttp2(true);
+		net::HttpClient http(nc);
+
+		net::TileEndpoint ep;
+		tile::TileDownloader dl(disk, http, ep);
+
+		// 서울시청 타일
+		auto id = core::TileMath::lonlatToTileID(126.9780, 37.5665, 12);
+		auto res = dl.ensureRaster(id);
+		if (!res.ok()) 
+        { 
+            std::cerr << "fetch failed\n"; return; 
+        }
+
+		// PNG -> RGBA
+		decode::Image img;
+		std::string err;
+		if (!decode::PngCodec::decode(res.body, img, 4, &err)) 
+        {
+			std::cerr << "decode failed: " << err << "\n";
+			return;
+		}
+		std::cout << "decoded: " << img.width << "x" << img.height
+			<< " ch=" << img.channels
+			<< " bytes=" << img.sizeBytes() << "\n";
+
+		// (선택) 원본 PNG 저장
+		std::ofstream f("tile_raw.png", std::ios::binary);
+		f.write(reinterpret_cast<const char*>(res.body.data()), (std::streamsize)res.body.size());
+    }
 }
 
 int main() 
 {
     //  slippygl::smoketest::RunSlippyGLTest();
 	//  slippygl::smoketest::RunDiskCacheTest();
-	slippygl::smoketest::RunTileDownloaderTest();
+	//  slippygl::smoketest::RunTileDownloaderTest();
+	slippygl::smoketest::RunPngCodecTest();
 	return 0;
 }
