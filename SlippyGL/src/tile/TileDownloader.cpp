@@ -14,7 +14,7 @@ bool TileDownloader::tryLoadFromDisk(const slippygl::core::TileID& id,
                                      std::optional<slippygl::cache::CacheMeta>& outMeta) const
 {
     std::lock_guard<std::mutex> lk(mtx_);
-    bool hit = disk_.loadRaster(id, outBytes);
+    const bool hit = disk_.loadRaster(id, outBytes);
 	if (!hit)
 	{
 		return false;
@@ -54,7 +54,7 @@ FetchResult TileDownloader::ensureRaster(const slippygl::core::TileID& id)
 
     // 2) 네트워크 다운로드
     const std::string url = ep_.rasterUrl(id);
-    auto resp = http_.get(url);
+    const auto resp = http_.get(url);
 
     r.httpStatus  = resp.status();
     r.effectiveUrl = resp.effectiveUrl();
@@ -160,11 +160,27 @@ FetchResult TileDownloader::ensureRasterConditional(const slippygl::core::TileID
     {
         r.body = resp.body();
         slippygl::cache::CacheMeta meta;
-        if (auto e = resp.headers().etag())           meta.setEtag(e);
-        if (auto lm = resp.headers().lastModified())  meta.setLastModified(lm);
-        if (auto ct = resp.headers().contentType())   meta.setContentType(ct);
-        if (auto ce = resp.headers().contentEncoding()) meta.setContentEncoding(ce);
-        if (auto cl = resp.headers().contentLength())   meta.setContentLength(*cl);
+        if (const auto& e = resp.headers().etag())
+        {
+            meta.setEtag(e);
+        }
+        if (const auto& lm = resp.headers().lastModified())
+        {
+            meta.setLastModified(lm);
+        }
+        if (const auto& ct = resp.headers().contentType())
+        {
+            meta.setContentType(ct);
+        }
+        if (const auto& ce = resp.headers().contentEncoding())
+        {
+            meta.setContentEncoding(ce);
+        }
+        if (const auto& cl = resp.headers().contentLength())
+        {
+            meta.setContentLength(*cl);
+        }
+
         meta.touch(static_cast<std::uint64_t>(time(nullptr)));
         {
             std::lock_guard<std::mutex> lk(mtx_);
