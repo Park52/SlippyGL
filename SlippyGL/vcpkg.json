@@ -2,13 +2,13 @@
   "name": "slippygl",
   "version-string": "0.1.0",
   "dependencies": [
-    { "name": "curl", "default-features": false, "features": ["schannel", "http2"] },
-    "openssl",
-    "spdlog",
-    "nlohmann-json",
     "glfw3",
     "glad",
-    "glm",
-    "stb"
+    "spdlog",
+    "nlohmann-json",
+
+    { "name": "curl", "default-features": false, "features": ["schannel"], "platform": "windows" },
+    { "name": "curl", "default-features": false, "features": ["openssl"], "platform": "!windows" },
+    { "name": "openssl", "platform": "!windows" }
   ]
 }

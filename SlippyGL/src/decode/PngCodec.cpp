@@ -1,13 +1,5 @@
 ﻿#include "PngCodec.hpp"
-
-// STB 라이브러리 구현체 포함 (헤더 인클루드 전에 정의해야 함!)
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_NO_STDIO          // 파일 I/O 비활성화(메모리만 사용)
-#define STBI_ONLY_PNG          // PNG만 디코드
-#define STBI_FAILURE_USERMSG   // 사용자 정의 에러 메시지 활성화
-
 #include <stb_image.h>
-
 namespace slippygl::decode
 {
 
