@@ -424,4 +424,23 @@ out/
 
 # Visual Studio files
 *.vcxproj.user
-*.vs/
+*.vs/# Build outputs
+build/
+SlippyGL/build/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/*.vcxproj*
+**/*.sln
+
+# vcpkg
+**/vcpkg_installed/
+
+# IDE
+.vscode/
+.idea/
+
+# Patches / temp
+*.diff
+*.patch
+.DS_Store
