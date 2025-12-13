@@ -18,6 +18,8 @@
 #include "render/GlBootstrap.hpp"
 #include "render/TextureManager.hpp"
 #include "render/QuadRenderer.hpp"
+#include "render/Camera2D.hpp"
+#include "render/InputHandler.hpp"
 
 namespace slippygl::smoketest 
 {
@@ -290,6 +292,7 @@ namespace slippygl::smoketest
 /**
  * OpenGL 타일 렌더링 데모
  * TileDownloader -> PngCodec -> TextureManager -> QuadRenderer 파이프라인
+ * Camera2D를 통한 팬/줌 지원
  */
 void RunTileRenderDemo()
 {
@@ -297,7 +300,7 @@ void RunTileRenderDemo()
 
     // 1) OpenGL 컨텍스트/윈도우 초기화
     render::GlBootstrap gl;
-    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Tile Render Demo" };
+    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Tile Render Demo (Drag=Pan, Scroll=Zoom, R=Reset)" };
     
     if (!gl.init(winCfg)) {
         spdlog::error("OpenGL initialization failed");
@@ -313,7 +316,12 @@ void RunTileRenderDemo()
         return;
     }
 
-    // 3) 타일 다운로더 준비
+    // 3) 카메라 및 입력 핸들러 초기화
+    render::Camera2D camera;
+    render::InputHandler inputHandler;
+    inputHandler.attach(gl.window(), &camera);
+
+    // 4) 타일 다운로더 준비
     cache::CacheConfig cacheCfg((std::filesystem::current_path() / "cache").string());
     cache::DiskCache diskCache(cacheCfg);
 
@@ -326,7 +334,7 @@ void RunTileRenderDemo()
     net::TileEndpoint endpoint;
     tile::TileDownloader downloader(diskCache, http, endpoint);
 
-    // 4) 타일 다운로드 (서울시청 근처, 줌 12)
+    // 5) 타일 다운로드 (서울시청 근처, 줌 12)
     constexpr double lat = 37.5665;
     constexpr double lon = 126.9780;
     constexpr int zoom = 12;
@@ -342,7 +350,7 @@ void RunTileRenderDemo()
     
     spdlog::info("Tile downloaded: {} bytes", fetchResult.body.size());
 
-    // 5) PNG 디코딩
+    // 6) PNG 디코딩
     decode::Image img;
     std::string decodeErr;
     
@@ -354,7 +362,7 @@ void RunTileRenderDemo()
     spdlog::info("Image decoded: {}x{} ({} channels)", 
         img.width, img.height, img.channels);
 
-    // 6) 텍스처 생성
+    // 7) 텍스처 생성
     const render::TexHandle tex = texMgr.createRGBA8(img.width, img.height, img.pixels.data());
     if (tex == 0) {
         spdlog::error("Texture creation failed");
@@ -363,22 +371,26 @@ void RunTileRenderDemo()
     
     spdlog::info("Texture created (handle={})", tex);
 
-    // 7) 렌더 루프
-    spdlog::info("Entering render loop (press ESC to exit)");
+    // 8) 렌더 루프
+    spdlog::info("Entering render loop");
+    spdlog::info("Controls: Drag=Pan, Scroll=Zoom, R=Reset, ESC=Exit");
     
     while (!gl.shouldClose()) {
         gl.poll();
         gl.beginFrame(0.2f, 0.2f, 0.3f);  // 진한 파란색 배경
 
-        // 타일을 화면 중앙에 배치
+        // 프레임버퍼 크기 가져오기
         const int fbW = gl.width();
         const int fbH = gl.height();
+        
+        // 타일을 월드 좌표 (0, 0)에 배치 (카메라가 뷰를 변환)
         const int tileW = img.width;
         const int tileH = img.height;
         
+        // 초기에 화면 중앙에 보이도록 타일 위치 설정
         render::Quad q;
-        q.x = (fbW - tileW) / 2;  // 수평 중앙
-        q.y = (fbH - tileH) / 2;  // 수직 중앙
+        q.x = (fbW - tileW) / 2;  // 월드 좌표에서 타일 위치
+        q.y = (fbH - tileH) / 2;
         q.w = tileW;
         q.h = tileH;
         q.sx = 0;
@@ -386,13 +398,16 @@ void RunTileRenderDemo()
         q.sw = tileW;
         q.sh = tileH;
 
-        quadRenderer.draw(tex, q, img.width, img.height, fbW, fbH);
+        // 카메라 MVP 행렬 적용
+        const glm::mat4 mvp = camera.mvp(fbW, fbH);
+        quadRenderer.draw(tex, q, img.width, img.height, mvp);
 
         gl.endFrame();
     }
 
-    // 8) 리소스 정리 (RAII로 자동 해제되지만 명시적으로도 가능)
+    // 9) 리소스 정리
     spdlog::info("Shutting down...");
+    inputHandler.detach();
     texMgr.destroy(tex);
     quadRenderer.shutdown();
     gl.shutdown();

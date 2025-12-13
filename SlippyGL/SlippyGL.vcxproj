@@ -146,7 +146,9 @@
     <ClCompile Include="src\net\HttpClient.cpp" />
     <ClCompile Include="src\net\HttpTypes.cpp" />
     <ClCompile Include="src\net\TileEndpoint.cpp" />
+    <ClCompile Include="src\render\Camera2D.cpp" />
     <ClCompile Include="src\render\GlBootstrap.cpp" />
+    <ClCompile Include="src\render\InputHandler.cpp" />
     <ClCompile Include="src\render\QuadRenderer.cpp" />
     <ClCompile Include="src\render\TextureManager.cpp" />
     <ClCompile Include="src\tile\TileDownloader.cpp" />
@@ -162,7 +164,9 @@
     <ClInclude Include="src\net\HttpClient.hpp" />
     <ClInclude Include="src\net\HttpTypes.hpp" />
     <ClInclude Include="src\net\TileEndpoint.hpp" />
+    <ClInclude Include="src\render\Camera2D.hpp" />
     <ClInclude Include="src\render\GlBootstrap.hpp" />
+    <ClInclude Include="src\render\InputHandler.hpp" />
     <ClInclude Include="src\render\QuadRenderer.hpp" />
     <ClInclude Include="src\render\TextureManager.hpp" />
     <ClInclude Include="src\tile\TileDownloader.hpp" />
