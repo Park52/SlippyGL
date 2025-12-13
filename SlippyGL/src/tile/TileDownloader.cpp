@@ -36,7 +36,7 @@ FetchResult TileDownloader::ensureRaster(const slippygl::core::TileID& id)
 {
     FetchResult r;
 
-    // 1) 디스크 캐시 조회
+    // 1) Check disk cache
     {
         std::lock_guard<std::mutex> lk(mtx_);
         if (disk_.loadRaster(id, r.body)) 
@@ -52,7 +52,7 @@ FetchResult TileDownloader::ensureRaster(const slippygl::core::TileID& id)
         }
     }
 
-    // 2) 네트워크 다운로드
+    // 2) Network download
     const std::string url = ep_.rasterUrl(id);
     const auto resp = http_.get(url);
 
@@ -62,7 +62,7 @@ FetchResult TileDownloader::ensureRaster(const slippygl::core::TileID& id)
     if (resp.status() == 200) 
     {
         r.body = resp.body();
-        // 메타 구성
+        // Build meta
         slippygl::cache::CacheMeta meta;
         if (const auto& e = resp.headers().etag())
         {
@@ -86,7 +86,7 @@ FetchResult TileDownloader::ensureRaster(const slippygl::core::TileID& id)
         }
         meta.touch(static_cast<std::uint64_t>(time(nullptr)));
 
-        // 3) 저장 (원자적)
+        // 3) Save (atomic)
         {
             std::lock_guard<std::mutex> lk(mtx_);
             disk_.saveRaster(id, r.body, meta);
@@ -111,7 +111,7 @@ FetchResult TileDownloader::ensureRaster(const slippygl::core::TileID& id)
 
 FetchResult TileDownloader::ensureRasterConditional(const slippygl::core::TileID& id) 
 {
-    // 캐시 메타 있으면 If-None-Match/If-Modified-Since 헤더로 조건부 요청
+    // If cache meta exists, make conditional request with If-None-Match/If-Modified-Since headers
     std::optional<slippygl::cache::CacheMeta> cachedMeta;
     std::vector<std::uint8_t> cachedBytes;
     {
@@ -127,7 +127,7 @@ FetchResult TileDownloader::ensureRasterConditional(const slippygl::core::TileID
     }
     if (!cachedMeta.has_value()) 
     {
-        return ensureRaster(id); // 메타 없으면 일반 경로
+        return ensureRaster(id); // No meta, use normal path
     }
 
     slippygl::net::Conditional cond;
@@ -149,11 +149,11 @@ FetchResult TileDownloader::ensureRasterConditional(const slippygl::core::TileID
 
     if (resp.status() == 304) 
     { 
-        // Not Modified → 캐시 재사용
+        // Not Modified -> reuse cache
         r.code = FetchCode::kNotModified;
         r.body = std::move(cachedBytes);
         r.meta = cachedMeta;
-        // 접근 시간만 갱신해 저장하고 싶다면 DiskCache.saveMeta(...) 호출
+        // If you want to update access time only, call DiskCache.saveMeta(...)
         return r;
     }
     if (resp.status() == 200) 

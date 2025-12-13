@@ -8,10 +8,10 @@ struct Image
 {
     std::int32_t width = 0;
     std::int32_t height = 0;
-    std::int32_t channels = 0;                 // 실제 결과 채널 수 (예: 4)
-    std::vector<std::uint8_t> pixels;          // RGBA8 등
+    std::int32_t channels = 0;                 // Actual result channel count (e.g., 4)
+    std::vector<std::uint8_t> pixels;          // RGBA8 etc.
 
-    // 유효성 검사 (크기와 데이터 일관성 확인)
+    // Validity check (verify size and data consistency)
     bool valid() const noexcept
     {
         if (width <= 0 || height <= 0 || channels <= 0) 
@@ -24,13 +24,13 @@ struct Image
         return pixels.size() == expectedSize;
     }
 
-    // 픽셀 데이터 크기
+    // Pixel data size in bytes
     std::size_t sizeBytes() const noexcept
     {
         return pixels.size();
     }
 
-    // 예상 픽셀 데이터 크기
+    // Expected pixel data size
     std::size_t expectedSizeBytes() const noexcept
     {
         if (width <= 0 || height <= 0 || channels <= 0) 
@@ -42,7 +42,7 @@ struct Image
                static_cast<std::size_t>(channels);
     }
 
-    // 이미지 초기화
+    // Clear image
     void clear() noexcept
     {
         width = 0;
@@ -51,7 +51,7 @@ struct Image
         pixels.clear();
     }
 
-    // 빈 이미지인지 확인
+    // Check if image is empty
     bool empty() const noexcept
     {
         return pixels.empty();

@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\sources\SlippyGL\SlippyGL\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(SolutionDir)external\stb;$(SolutionDir)external\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -126,6 +126,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(SolutionDir)external\stb;$(SolutionDir)external\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +146,9 @@
     <ClCompile Include="src\net\HttpClient.cpp" />
     <ClCompile Include="src\net\HttpTypes.cpp" />
     <ClCompile Include="src\net\TileEndpoint.cpp" />
+    <ClCompile Include="src\render\GlBootstrap.cpp" />
+    <ClCompile Include="src\render\QuadRenderer.cpp" />
+    <ClCompile Include="src\render\TextureManager.cpp" />
     <ClCompile Include="src\tile\TileDownloader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +162,9 @@
     <ClInclude Include="src\net\HttpClient.hpp" />
     <ClInclude Include="src\net\HttpTypes.hpp" />
     <ClInclude Include="src\net\TileEndpoint.hpp" />
+    <ClInclude Include="src\render\GlBootstrap.hpp" />
+    <ClInclude Include="src\render\QuadRenderer.hpp" />
+    <ClInclude Include="src\render\TextureManager.hpp" />
     <ClInclude Include="src\tile\TileDownloader.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

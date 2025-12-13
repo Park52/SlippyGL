@@ -19,23 +19,23 @@ namespace slippygl::cache
 		
 		if (!std::filesystem::exists(path)) 
 		{
-			return false; // 캐시 미스
+			return false; // cache miss
 		}
 
-		// 파일 읽기
+		// Read file
 		try 
 		{
 			std::ifstream ifs(path, std::ios::binary);
 			if (!ifs) 
             {
-				return false; // 파일 열기 실패
+				return false; // file open failed
 			}
 			outBytes.assign(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
-			return true; // 캐시 히트
+			return true; // cache hit
 		} 
 		catch (const std::exception&) 
 		{
-			return false; // 파일 읽기 실패
+			return false; // file read failed
 		}
 	}
 
@@ -48,19 +48,19 @@ namespace slippygl::cache
 		
 		if (!ensureParentDir(path)) 
 		{
-			return false; // 디렉토리 생성 실패
+			return false; // Directory creation failed
 		}
 		if (!atomicWriteFile(path + ".part", bytes)) 
 		{
-			return false; // 임시 파일 쓰기 실패
+			return false; // Temp file write failed
 		}
 		if (meta.has_value()) 
 		{
-			saveMetaInternal(id, meta.value()); // 내부 메서드 호출 (락 없음)
+			saveMetaInternal(id, meta.value()); // Call internal method (no lock)
 		}
 
 		try {
-			std::filesystem::rename(path + ".part", path); // 원자적 rename
+			std::filesystem::rename(path + ".part", path); // Atomic rename
 			return true;
 		} catch (const std::exception&) {
 			return false;
@@ -73,22 +73,22 @@ namespace slippygl::cache
 		const std::string path = metaPath(id);
 		if (!std::filesystem::exists(path)) 
 		{
-			return false; // 캐시 미스
+			return false; // Cache miss
 		}
 		try 
 		{
 			std::ifstream ifs(path);
 			if (!ifs) 
 			{
-				return false; // 파일 열기 실패
+				return false; // File open failed
 			}
 			std::string json((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-			out = CacheMeta::fromJsonString(json); // JSON 파싱 (CacheMeta에 fromJson 정적 함수 필요)
-			return true; // 캐시 히트
+			out = CacheMeta::fromJsonString(json); // JSON parse (CacheMeta requires fromJson static function)
+			return true; // Cache hit
 		} 
 		catch (const std::exception&) 
 		{
-			return false; // 파일 읽기 실패
+			return false; // File read failed
 		}
 	}
 
@@ -100,17 +100,17 @@ namespace slippygl::cache
 
 	bool DiskCache::saveMetaInternal(const slippygl::core::TileID& id, const CacheMeta& meta) noexcept
 	{
-		// 이 메서드는 이미 락이 획득된 상태에서 호출됨 (락 없음)
+		// This method is called when lock is already held (no lock)
 		const std::string path = metaPath(id);
 		
 		if (!ensureParentDir(path)) 
 		{
-			return false; // 디렉토리 생성 실패
+			return false; // Directory creation failed
 		}
 		
 		try 
 		{
-			std::string json = CacheMeta::toJsonString(meta); // JSON 직렬화
+			std::string json = CacheMeta::toJsonString(meta); // JSON serialize
 			if (!atomicWriteText(path + ".part", json)) {
 				return false;
 			}
@@ -119,7 +119,7 @@ namespace slippygl::cache
 		} 
 		catch (const std::exception&) 
 		{
-			return false; // 파일 쓰기 실패
+			return false; // File write failed
 		}
 	}
 

@@ -1,16 +1,24 @@
 ﻿#include "PngCodec.hpp"
+
+// STB Image library configuration (must be before include)
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_STDIO          // Disable file I/O (memory only)
+#define STBI_ONLY_PNG          // PNG only
+
+// vcpkg stb package uses this path
 #include <stb_image.h>
+
 namespace slippygl::decode
 {
 
-// RAII 래퍼로 메모리 안전성 보장
+// RAII wrapper for stb_image memory safety
 class StbImageRAII 
 {
 public:
     explicit StbImageRAII(unsigned char* ptr) noexcept : ptr_(ptr) {}
     ~StbImageRAII() noexcept { if (ptr_) stbi_image_free(ptr_); }
     
-    // 복사/이동 금지
+    // Non-copyable, non-movable
     StbImageRAII(const StbImageRAII&) = delete;
     StbImageRAII& operator=(const StbImageRAII&) = delete;
     StbImageRAII(StbImageRAII&&) = delete;
@@ -28,10 +36,10 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
                      const std::int32_t desiredChannels,
                      std::string* err) noexcept
 {
-    // 결과 초기화
+    // Reset output
     out.clear();
 
-    // 입력 검증
+    // Validate input
     if (pngBytes.empty())
     {
         if (err) 
@@ -41,7 +49,7 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
         return false;
     }
 
-    // 채널 수 검증
+    // Validate channel count
     if (desiredChannels != 0 && 
         (desiredChannels < 1 || desiredChannels > 4))
     {
@@ -52,9 +60,9 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
         return false;
     }
 
-    // 크기 제한 (메모리 보호)
+    // Size limit (memory protection, 256MB max)
     if (pngBytes.size() > 256 * 1024 * 1024) 
-    { // 256MB 제한
+    {
         if (err) 
         {
             *err = "PNG data too large (>256MB)";
@@ -63,7 +71,7 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
     }
 
     try {
-        // STB 디코딩
+        // STB decoding
         std::int32_t w = 0, h = 0, originalChannels = 0;
         const std::int32_t requestedChannels = (desiredChannels == 0) ? 0 : desiredChannels;
         
@@ -74,7 +82,7 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
             requestedChannels
         );
 
-        // RAII로 메모리 관리
+        // RAII memory management
         StbImageRAII dataGuard(data);
         
         if (!dataGuard) 
@@ -88,7 +96,7 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
             return false;
         }
 
-        // 결과 검증
+        // Validate result
         if (w <= 0 || h <= 0 || originalChannels <= 0) 
         {
             if (err) 
@@ -98,15 +106,15 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
             return false;
         }
 
-        // 최종 채널 수 결정
+        // Determine final channel count
         const std::int32_t finalChannels = (desiredChannels == 0) ? originalChannels : desiredChannels;
         
-        // 픽셀 데이터 크기 계산
+        // Calculate pixel data size
         const std::size_t pixelDataSize = static_cast<std::size_t>(w) * 
                                          static_cast<std::size_t>(h) * 
                                          static_cast<std::size_t>(finalChannels);
 
-        // 결과 설정
+        // Set result
         out.width = w;
         out.height = h;
         out.channels = finalChannels;
@@ -115,7 +123,7 @@ bool PngCodec::decode(const std::vector<std::uint8_t>& pngBytes,
         return true;
     }
     catch (...) {
-        // STB 함수들이 예외를 던질 수 있으므로 안전 장치
+        // Safety catch for any unexpected exceptions
         if (err) 
         {
             *err = "Unexpected error during PNG decoding";
