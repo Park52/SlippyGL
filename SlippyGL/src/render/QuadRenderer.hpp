@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "TextureManager.hpp"
+#include <glm/glm.hpp>
 
 namespace slippygl::render 
 {
@@ -41,15 +42,25 @@ namespace slippygl::render
 		void shutdown();
 
 		/**
-		 * Draw textured quad
+		 * Draw textured quad (generates internal projection matrix)
 		 * @param tex Texture handle
-		 * @param q Quad info
+		 * @param q Quad info (in world coordinates)
 		 * @param texFullW Texture full width
 		 * @param texFullH Texture full height
 		 * @param fbW Framebuffer width
 		 * @param fbH Framebuffer height
 		 */
 		void draw(TexHandle tex, const Quad& q, int texFullW, int texFullH, int fbW, int fbH);
+
+		/**
+		 * Draw textured quad with external MVP matrix
+		 * @param tex Texture handle
+		 * @param q Quad info (in world coordinates)
+		 * @param texFullW Texture full width
+		 * @param texFullH Texture full height
+		 * @param mvp Model-View-Projection matrix
+		 */
+		void draw(TexHandle tex, const Quad& q, int texFullW, int texFullH, const glm::mat4& mvp);
 
 	private:
 		unsigned int vao_ = 0;

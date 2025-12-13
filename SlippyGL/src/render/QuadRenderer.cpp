@@ -1,12 +1,14 @@
 ﻿#include "QuadRenderer.hpp"
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <array>
+#include <cmath>
 
 namespace slippygl::render
 {
 
-// Vertex shader: converts pixel coordinates to clip coordinates using orthographic projection
+// Vertex shader: converts pixel coordinates to clip coordinates using MVP matrix
 static const char* kVertexShader = R"(
 #version 330 core
 layout (location = 0) in vec2 aPos;
@@ -154,24 +156,31 @@ bool QuadRenderer::compileShaders()
 
 void QuadRenderer::draw(TexHandle tex, const Quad& q, int texFullW, int texFullH, int fbW, int fbH)
 {
-    if (!program_ || !vao_ || tex == 0) return;
-    if (texFullW <= 0 || texFullH <= 0 || fbW <= 0 || fbH <= 0) return;
+    if (fbW <= 0 || fbH <= 0) return;
 
+    // Build simple orthographic MVP (no camera transform)
     // Orthographic projection matrix (top-left origin, Y-axis down)
-    // Clip coordinates: x: [0, fbW] -> [-1, 1], y: [0, fbH] -> [1, -1]
-    float proj[16] = {0};
-    proj[0] = 2.0f / static_cast<float>(fbW);       // scale x
-    proj[5] = -2.0f / static_cast<float>(fbH);      // scale y (y-down)
-    proj[10] = -1.0f;                                // scale z
-    proj[12] = -1.0f;                                // translate x
-    proj[13] = 1.0f;                                 // translate y
-    proj[15] = 1.0f;
+    glm::mat4 proj(0.0f);
+    proj[0][0] = 2.0f / static_cast<float>(fbW);      // scale x
+    proj[1][1] = -2.0f / static_cast<float>(fbH);     // scale y (y-down)
+    proj[2][2] = -1.0f;                                // scale z
+    proj[3][0] = -1.0f;                                // translate x
+    proj[3][1] = 1.0f;                                 // translate y
+    proj[3][3] = 1.0f;
 
-    // Generate quad vertices (pixel coordinates)
-    const float x0 = static_cast<float>(q.x);
-    const float y0 = static_cast<float>(q.y);
-    const float x1 = static_cast<float>(q.x + q.w);
-    const float y1 = static_cast<float>(q.y + q.h);
+    draw(tex, q, texFullW, texFullH, proj);
+}
+
+void QuadRenderer::draw(TexHandle tex, const Quad& q, int texFullW, int texFullH, const glm::mat4& mvp)
+{
+    if (!program_ || !vao_ || tex == 0) return;
+    if (texFullW <= 0 || texFullH <= 0) return;
+
+    // Generate quad vertices (world pixel coordinates, floor-aligned for crisp rendering)
+    const float x0 = std::floor(static_cast<float>(q.x));
+    const float y0 = std::floor(static_cast<float>(q.y));
+    const float x1 = std::floor(static_cast<float>(q.x + q.w));
+    const float y1 = std::floor(static_cast<float>(q.y + q.h));
 
     // Texture coordinates (normalized to 0..1 range)
     const float tw = static_cast<float>(texFullW);
@@ -200,7 +209,7 @@ void QuadRenderer::draw(TexHandle tex, const Quad& q, int texFullW, int texFullH
 
     // Render
     glUseProgram(program_);
-    glUniformMatrix4fv(uProjLoc_, 1, GL_FALSE, proj);
+    glUniformMatrix4fv(uProjLoc_, 1, GL_FALSE, glm::value_ptr(mvp));
     glUniform1i(uTexLoc_, 0);
 
     glActiveTexture(GL_TEXTURE0);
