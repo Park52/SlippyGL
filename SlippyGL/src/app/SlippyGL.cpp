@@ -1,9 +1,10 @@
-﻿#include <iostream>
-#include <fstream>
+﻿#include <fstream>
 #include <string>
 #include <vector>
 #include <thread>
 #include <filesystem>
+
+#include <spdlog/spdlog.h>
 
 #include "core/TileMath.hpp"
 #include "core/Types.hpp"
@@ -14,6 +15,9 @@
 #include "tile/TileDownloader.hpp"
 #include "decode/Image.hpp"
 #include "decode/PngCodec.hpp"
+#include "render/GlBootstrap.hpp"
+#include "render/TextureManager.hpp"
+#include "render/QuadRenderer.hpp"
 
 namespace slippygl::smoketest 
 {
@@ -24,24 +28,24 @@ namespace slippygl::smoketest
     using namespace slippygl::cache;
 	using namespace slippygl::tile;
 	using namespace slippygl::decode;
-	// 슬리피맵 타일을 가져와서 저장하는 간단한 테스트 프로그램
+	// Simple test program to fetch and save a slippy map tile
     void RunSlippyGLTest() 
     {
-        // 1) 타겟 위치/줌 (서울시청 근처)
+        // 1) Target location/zoom (near Seoul City Hall)
         constexpr double lat = 37.5665;
         constexpr double lon = 126.9780;
         constexpr int z = 12;
 
-        // 2) 위경도 -> TileID (우리 함수명/네임스페이스와 일치)
+        // 2) lat/lon -> TileID (matching our function/namespace)
         const slippygl::core::TileID id = slippygl::core::TileMath::lonlatToTileID(lon, lat, z);
-        std::cout << "[Tile] " << id.toString() << std::endl;
+        spdlog::info("[Tile] {}", id.toString());
 
-        // 3) URL 생성 (타일 서버 기본값 사용)
+        // 3) Generate URL (using default tile server)
         slippygl::net::TileEndpoint ep;
         const std::string url = ep.rasterUrl(id);
-        std::cout << "[URL]  " << url << std::endl;
+        spdlog::info("[URL]  {}", url);
 
-        // 4) HttpClient 설정 및 GET
+        // 4) HttpClient setup and GET
         slippygl::net::NetConfig cfg;
         cfg.setUserAgent("SlippyGL/0.1 (+you@example.com)")
             .setVerifyTLS(true)
@@ -50,21 +54,21 @@ namespace slippygl::smoketest
         slippygl::net::HttpClient http(cfg);
 
         auto resp = http.get(url);
-        std::cout << "[HTTP] status=" << resp.status() << " bytes=" << resp.body().size() << std::endl;
+        spdlog::info("[HTTP] status={} bytes={}", resp.status(), resp.body().size());
 
-        // 5) 성공 시 파일 저장
+        // 5) Save file on success
         if ((200 == resp.status()) && (!resp.body().empty())) 
         {
             std::ofstream ofs("tile.png", std::ios::binary);
             const auto& b = resp.body();
             ofs.write(reinterpret_cast<const char*>(b.data()), static_cast<std::streamsize>(b.size()));
             ofs.close();
-            std::cout << "[SAVE] tile.png written\n";
+            spdlog::info("[SAVE] tile.png written");
             return;
         }
         else 
         {
-            std::cerr << "[ERROR] fetch failed\n";
+            spdlog::error("[ERROR] fetch failed");
             return;
         }
 	}
@@ -78,7 +82,11 @@ namespace slippygl::smoketest
         return v;
     }
     static void printOk(bool ok, const char* what) {
-        std::cout << (ok ? "[OK] " : "[FAIL] ") << what << "\n";
+        if (ok) {
+            spdlog::info("[OK] {}", what);
+        } else {
+            spdlog::warn("[FAIL] {}", what);
+        }
     }
 
     // ---- scenarios ----
@@ -191,7 +199,7 @@ namespace slippygl::smoketest
     {
         try {
             fs::path root = fs::current_path() / "temp-cache";
-            std::cout << "[INFO] cache root: " << root.string() << "\n";
+            spdlog::info("[INFO] cache root: {}", root.string());
 
             CacheConfig cfg(root.string());
             DiskCache cache(cfg);
@@ -206,10 +214,10 @@ namespace slippygl::smoketest
             ok &= Smoke_ClearAll(cache, id);
             ok &= Smoke_Concurrency(cache, id);
 
-            std::cout << "\n[RESULT] " << (ok ? "ALL PASS" : "SOME FAILED") << "\n";
+            spdlog::info("\n[RESULT] {}", ok ? "ALL PASS" : "SOME FAILED");
         }
         catch (const std::exception& ex) {
-            std::cerr << "[EXCEPTION] " << ex.what() << "\n";
+            spdlog::error("[EXCEPTION] {}", ex.what());
         }
     }
 
@@ -258,7 +266,8 @@ namespace slippygl::smoketest
 		auto res = dl.ensureRaster(id);
 		if (!res.ok()) 
         { 
-            std::cerr << "fetch failed\n"; return; 
+            spdlog::error("fetch failed"); 
+            return; 
         }
 
 		// PNG -> RGBA
@@ -266,12 +275,11 @@ namespace slippygl::smoketest
 		std::string err;
 		if (!decode::PngCodec::decode(res.body, img, 4, &err)) 
         {
-			std::cerr << "decode failed: " << err << "\n";
+			spdlog::error("decode failed: {}", err);
 			return;
 		}
-		std::cout << "decoded: " << img.width << "x" << img.height
-			<< " ch=" << img.channels
-			<< " bytes=" << img.sizeBytes() << "\n";
+		spdlog::info("decoded: {}x{} ch={} bytes={}", 
+			img.width, img.height, img.channels, img.sizeBytes());
 
 		// (선택) 원본 PNG 저장
 		std::ofstream f("tile_raw.png", std::ios::binary);
@@ -279,11 +287,129 @@ namespace slippygl::smoketest
     }
 }
 
+/**
+ * OpenGL 타일 렌더링 데모
+ * TileDownloader -> PngCodec -> TextureManager -> QuadRenderer 파이프라인
+ */
+void RunTileRenderDemo()
+{
+    using namespace slippygl;
+
+    // 1) OpenGL 컨텍스트/윈도우 초기화
+    render::GlBootstrap gl;
+    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Tile Render Demo" };
+    
+    if (!gl.init(winCfg)) {
+        spdlog::error("OpenGL initialization failed");
+        return;
+    }
+
+    // 2) 렌더링 모듈 초기화
+    render::TextureManager texMgr;
+    render::QuadRenderer quadRenderer;
+    
+    if (!quadRenderer.init()) {
+        spdlog::error("QuadRenderer initialization failed");
+        return;
+    }
+
+    // 3) 타일 다운로더 준비
+    cache::CacheConfig cacheCfg((std::filesystem::current_path() / "cache").string());
+    cache::DiskCache diskCache(cacheCfg);
+
+    net::NetConfig netCfg;
+    netCfg.setUserAgent("SlippyGL/0.1 (+contact@example.com)")
+          .setVerifyTLS(true)
+          .setHttp2(true);
+    net::HttpClient http(netCfg);
+
+    net::TileEndpoint endpoint;
+    tile::TileDownloader downloader(diskCache, http, endpoint);
+
+    // 4) 타일 다운로드 (서울시청 근처, 줌 12)
+    constexpr double lat = 37.5665;
+    constexpr double lon = 126.9780;
+    constexpr int zoom = 12;
+    const auto tileId = core::TileMath::lonlatToTileID(lon, lat, zoom);
+    
+    spdlog::info("Downloading tile: {}", tileId.toString());
+    
+    const auto fetchResult = downloader.ensureRaster(tileId);
+    if (!fetchResult.ok()) {
+        spdlog::error("Tile download failed (HTTP {})", fetchResult.httpStatus);
+        return;
+    }
+    
+    spdlog::info("Tile downloaded: {} bytes", fetchResult.body.size());
+
+    // 5) PNG 디코딩
+    decode::Image img;
+    std::string decodeErr;
+    
+    if (!decode::PngCodec::decode(fetchResult.body, img, 4, &decodeErr)) {
+        spdlog::error("PNG decode failed: {}", decodeErr);
+        return;
+    }
+    
+    spdlog::info("Image decoded: {}x{} ({} channels)", 
+        img.width, img.height, img.channels);
+
+    // 6) 텍스처 생성
+    const render::TexHandle tex = texMgr.createRGBA8(img.width, img.height, img.pixels.data());
+    if (tex == 0) {
+        spdlog::error("Texture creation failed");
+        return;
+    }
+    
+    spdlog::info("Texture created (handle={})", tex);
+
+    // 7) 렌더 루프
+    spdlog::info("Entering render loop (press ESC to exit)");
+    
+    while (!gl.shouldClose()) {
+        gl.poll();
+        gl.beginFrame(0.2f, 0.2f, 0.3f);  // 진한 파란색 배경
+
+        // 타일을 화면 중앙에 배치
+        const int fbW = gl.width();
+        const int fbH = gl.height();
+        const int tileW = img.width;
+        const int tileH = img.height;
+        
+        render::Quad q;
+        q.x = (fbW - tileW) / 2;  // 수평 중앙
+        q.y = (fbH - tileH) / 2;  // 수직 중앙
+        q.w = tileW;
+        q.h = tileH;
+        q.sx = 0;
+        q.sy = 0;
+        q.sw = tileW;
+        q.sh = tileH;
+
+        quadRenderer.draw(tex, q, img.width, img.height, fbW, fbH);
+
+        gl.endFrame();
+    }
+
+    // 8) 리소스 정리 (RAII로 자동 해제되지만 명시적으로도 가능)
+    spdlog::info("Shutting down...");
+    texMgr.destroy(tex);
+    quadRenderer.shutdown();
+    gl.shutdown();
+    
+    spdlog::info("Done.");
+}
+
 int main() 
 {
+    // 기존 테스트들 (주석 처리)
     //  slippygl::smoketest::RunSlippyGLTest();
-	//  slippygl::smoketest::RunDiskCacheTest();
-	//  slippygl::smoketest::RunTileDownloaderTest();
-	slippygl::smoketest::RunPngCodecTest();
-	return 0;
+    //  slippygl::smoketest::RunDiskCacheTest();
+    //  slippygl::smoketest::RunTileDownloaderTest();
+    //  slippygl::smoketest::RunPngCodecTest();
+    
+    // OpenGL 타일 렌더링 데모 실행
+    RunTileRenderDemo();
+    
+    return 0;
 }

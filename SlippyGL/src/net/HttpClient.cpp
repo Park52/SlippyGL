@@ -23,7 +23,7 @@ public:
         Bytes body;
         ResponseHeaders rhdr;
 
-        // 기본 옵션
+        // Default options
         curl_easy_setopt(easy, CURLOPT_URL, url.c_str());
         curl_easy_setopt(easy, CURLOPT_USERAGENT, cfg_.userAgent().c_str());
         curl_easy_setopt(easy, CURLOPT_CONNECTTIMEOUT_MS, cfg_.connectTimeoutMs());
@@ -32,7 +32,7 @@ public:
         curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1L);
         curl_easy_setopt(easy, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
-        // 압축 자동 처리(gzip/deflate/br 가능한 경우)
+        // Auto compression handling (gzip/deflate/br if supported)
 #ifdef CURLOPT_ACCEPT_ENCODING
         curl_easy_setopt(easy, CURLOPT_ACCEPT_ENCODING, "");
 #endif

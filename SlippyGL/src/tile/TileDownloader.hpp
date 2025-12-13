@@ -14,20 +14,20 @@ namespace slippygl::tile
 {
 enum class FetchCode : uint8_t
 {
-	kHitDisk = 0,     // 디스크 캐시에서 바로 가져옴
-	kDownloaded,      // 네트워크에서 받아와서 캐시에 저장
-	kNotModified,     // 304 (조건부 요청 성공, 캐시 재사용)
-	kNotFound,        // 404 등
-	kError            // 네트워크/IO 오류
+	kHitDisk = 0,     // Retrieved from disk cache
+	kDownloaded,      // Downloaded from network, saved to cache
+	kNotModified,     // 304 (conditional request success, cache reuse)
+	kNotFound,        // 404 etc.
+	kError            // Network/IO error
 };
 
 struct FetchResult
 {
 	FetchCode code = FetchCode::kError;
 	long      httpStatus = 0;                 // 200/304/404/...
-	std::string effectiveUrl;                 // redirect 후 최종 URL
-	std::optional<slippygl::cache::CacheMeta> meta; // 응답/캐시 메타
-	// 바디는 PNG 바이트
+	std::string effectiveUrl;                 // Final URL after redirect
+	std::optional<slippygl::cache::CacheMeta> meta; // Response/cache metadata
+	// Body is PNG bytes
 	std::vector<std::uint8_t> body;
 
 	bool ok() const
@@ -36,7 +36,7 @@ struct FetchResult
 	}
 };
 
-// 단일 쓰레드 동기 구현(초기). 이후 multi-queue/취소 토큰은 확장.
+// Single-threaded synchronous implementation (initial). Multi-queue/cancellation token extension later.
 class TileDownloader
 {
 public:
@@ -44,14 +44,14 @@ public:
 		slippygl::net::HttpClient& http,
 		slippygl::net::TileEndpoint& endpoint);
 
-	// 기본 경로: 캐시 히트면 바로 반환, 미스면 다운로드 후 저장
+	// Default path: return immediately on cache hit, download and save on miss
 	FetchResult ensureRaster(const slippygl::core::TileID& id);
 
-	// 조건부 요청 사용(캐시에 메타가 있으면 If-None-Match / If-Modified-Since 세팅)
-	// 캐시에 메타가 없으면 ensureRaster와 동일 동작
+	// Use conditional request (set If-None-Match / If-Modified-Since if cache meta exists)
+	// If no meta in cache, behaves same as ensureRaster
 	FetchResult ensureRasterConditional(const slippygl::core::TileID& id);
 
-	// 캐시만 확인(네트워크 접근 X)
+	// Check cache only (no network access)
 	bool tryLoadFromDisk(const slippygl::core::TileID& id, std::vector<std::uint8_t>& outBytes,
 		std::optional<slippygl::cache::CacheMeta>& outMeta) const;
 
@@ -60,7 +60,7 @@ private:
 	slippygl::net::HttpClient& http_;
 	slippygl::net::TileEndpoint& ep_;
 
-	// 동시성 보호 (초기엔 coarse lock; 나중에 타일별 세분화 가능)
+	// Concurrency protection (coarse lock initially; can be refined per-tile later)
 	mutable std::mutex mtx_;
 };
 

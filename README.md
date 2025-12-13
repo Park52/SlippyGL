@@ -41,7 +41,9 @@ ui/ # 입력 처리 및 HUD
 
 ## 🛠 개발 환경
 - **언어:** C++17 이상
-- **빌드:** Visual Studio 2022 (MSBuild)
+- **빌드:** 
+  - Windows: Visual Studio 2022 (MSBuild)
+  - Cross-platform: CMake 3.21+
 - **패키지 관리:** [vcpkg](https://github.com/microsoft/vcpkg) 매니페스트 모드
 - **외부 라이브러리:**
   - curl[openssl], openssl
@@ -49,16 +51,41 @@ ui/ # 입력 처리 및 HUD
   - nlohmann-json
   - glfw3
   - glad
-  - glm
-  - stb
+  - glm (header-only, git submodule)
+  - stb (header-only, git submodule)
 
 ---
 
 ## ⚙️ 빌드 방법
+
+### 1. Git Submodule 초기화 (필수)
+처음 클론하거나 체크아웃한 경우 먼저 submodule을 초기화합니다:
+```bash
+git submodule update --init --recursive
+```
+
+이 명령은 `external/glm`과 `external/stb` 디렉토리를 자동으로 가져옵니다.
+
+### 2. Windows (Visual Studio 2022)
 1. [vcpkg](https://github.com/microsoft/vcpkg) 설치 후 Visual Studio 2022에 통합  
 2. 레포 루트에 `vcpkg.json` 확인  
 3. 프로젝트 속성 → **vcpkg** → Use vcpkg Manifest = Yes, Triplet = x64-windows  
 4. 빌드(F5) 실행
+
+### 3. Cross-platform (CMake)
+1. vcpkg 설정:
+   ```bash
+   export VCPKG_ROOT=/path/to/vcpkg  # Linux/macOS
+   # or
+   set VCPKG_ROOT=C:\path\to\vcpkg   # Windows
+   ```
+
+2. CMake 빌드:
+   ```bash
+   mkdir build && cd build
+   cmake .. -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+   cmake --build .
+   ```
 
 ---
 
