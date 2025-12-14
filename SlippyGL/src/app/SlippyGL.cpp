@@ -20,6 +20,8 @@
 #include "render/QuadRenderer.hpp"
 #include "render/Camera2D.hpp"
 #include "render/InputHandler.hpp"
+#include "tile/TileRenderer.hpp"
+#include "tile/TileKey.hpp"
 
 namespace slippygl::smoketest 
 {
@@ -290,17 +292,20 @@ namespace slippygl::smoketest
 }
 
 /**
- * OpenGL 타일 렌더링 데모
- * TileDownloader -> PngCodec -> TextureManager -> QuadRenderer 파이프라인
+ * OpenGL 멀티 타일 렌더링 데모
+ * TileRenderer -> TileGrid -> TileCache -> QuadRenderer 파이프라인
  * Camera2D를 통한 팬/줌 지원
  */
 void RunTileRenderDemo()
 {
     using namespace slippygl;
 
+    // 디버깅을 위해 로그 레벨 설정
+    spdlog::set_level(spdlog::level::debug);
+
     // 1) OpenGL 컨텍스트/윈도우 초기화
     render::GlBootstrap gl;
-    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Tile Render Demo (Drag=Pan, Scroll=Zoom, R=Reset)" };
+    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Multi-Tile Render (Drag=Pan, Scroll=Zoom, R=Reset)" };
     
     if (!gl.init(winCfg)) {
         spdlog::error("OpenGL initialization failed");
@@ -334,46 +339,35 @@ void RunTileRenderDemo()
     net::TileEndpoint endpoint;
     tile::TileDownloader downloader(diskCache, http, endpoint);
 
-    // 5) 타일 다운로드 (서울시청 근처, 줌 12)
+    // 5) TileRenderer 초기화 (LRU 텍스처 캐시 포함)
+    tile::TileCache texCache(128 * 1024 * 1024); // 128MB texture budget
+    tile::TileRenderer tileRenderer(texCache, downloader, texMgr);
+
+    // 6) 초기 카메라 위치 설정 (서울시청 근처, 줌 12)
     constexpr double lat = 37.5665;
     constexpr double lon = 126.9780;
-    constexpr int zoom = 12;
-    const auto tileId = core::TileMath::lonlatToTileID(lon, lat, zoom);
+    constexpr int initialZoom = 12;
     
-    spdlog::info("Downloading tile: {}", tileId.toString());
+    // 서울시청 타일의 월드 픽셀 좌표 계산
+    const auto seoulTile = core::TileMath::lonlatToTileID(lon, lat, initialZoom);
+    const auto worldPos = tile::tileToWorldPixel(
+        tile::TileKey{ initialZoom, seoulTile.x(), seoulTile.y() });
     
-    const auto fetchResult = downloader.ensureRaster(tileId);
-    if (!fetchResult.ok()) {
-        spdlog::error("Tile download failed (HTTP {})", fetchResult.httpStatus);
-        return;
-    }
-    
-    spdlog::info("Tile downloaded: {} bytes", fetchResult.body.size());
+    spdlog::info("Initial tile: {} -> world ({}, {})", 
+        seoulTile.toString(), worldPos.x, worldPos.y);
 
-    // 6) PNG 디코딩
-    decode::Image img;
-    std::string decodeErr;
-    
-    if (!decode::PngCodec::decode(fetchResult.body, img, 4, &decodeErr)) {
-        spdlog::error("PNG decode failed: {}", decodeErr);
-        return;
-    }
-    
-    spdlog::info("Image decoded: {}x{} ({} channels)", 
-        img.width, img.height, img.channels);
-
-    // 7) 텍스처 생성
-    const render::TexHandle tex = texMgr.createRGBA8(img.width, img.height, img.pixels.data());
-    if (tex == 0) {
-        spdlog::error("Texture creation failed");
-        return;
-    }
-    
-    spdlog::info("Texture created (handle={})", tex);
+    // 카메라를 서울시청 타일 중심으로 이동
+    camera.setWorldOrigin(glm::vec2(
+        worldPos.x + tile::kTileSizePx / 2.0f,
+        worldPos.y + tile::kTileSizePx / 2.0f));
 
     // 8) 렌더 루프
     spdlog::info("Entering render loop");
     spdlog::info("Controls: Drag=Pan, Scroll=Zoom, R=Reset, ESC=Exit");
+    spdlog::info("Visible tiles will be loaded dynamically");
+    
+    int frameCount = 0;
+    int lastZoomLevel = initialZoom;
     
     while (!gl.shouldClose()) {
         gl.poll();
@@ -383,24 +377,39 @@ void RunTileRenderDemo()
         const int fbW = gl.width();
         const int fbH = gl.height();
         
-        // 타일을 월드 좌표 (0, 0)에 배치 (카메라가 뷰를 변환)
-        const int tileW = img.width;
-        const int tileH = img.height;
+        // 카메라 스케일 -> 줌 레벨 계산
+        // scale 1.0 = 기본 줌 레벨, 0.5 = 줌 아웃, 2.0 = 줌 인
+        const float scale = camera.scale();
+        int zoomLevel = initialZoom;
         
-        // 초기에 화면 중앙에 보이도록 타일 위치 설정
-        render::Quad q;
-        q.x = (fbW - tileW) / 2;  // 월드 좌표에서 타일 위치
-        q.y = (fbH - tileH) / 2;
-        q.w = tileW;
-        q.h = tileH;
-        q.sx = 0;
-        q.sy = 0;
-        q.sw = tileW;
-        q.sh = tileH;
+        // 스케일에 따른 줌 레벨 조정 (대략적 로그 스케일)
+        if (scale < 0.5f) {
+            zoomLevel = std::max(0, initialZoom - 2);
+        } else if (scale < 0.75f) {
+            zoomLevel = std::max(0, initialZoom - 1);
+        } else if (scale > 2.0f) {
+            zoomLevel = std::min(19, initialZoom + 2);
+        } else if (scale > 1.5f) {
+            zoomLevel = std::min(19, initialZoom + 1);
+        }
 
-        // 카메라 MVP 행렬 적용
-        const glm::mat4 mvp = camera.mvp(fbW, fbH);
-        quadRenderer.draw(tex, q, img.width, img.height, mvp);
+        // 줌 레벨이 바뀌면 로그 출력
+        if (zoomLevel != lastZoomLevel) {
+            spdlog::info("Zoom level changed: {} -> {} (scale: {:.2f})", 
+                lastZoomLevel, zoomLevel, scale);
+            lastZoomLevel = zoomLevel;
+        }
+
+        // TileRenderer로 화면에 보이는 모든 타일 렌더링
+        const int tilesRendered = tileRenderer.drawTiles(quadRenderer, camera, zoomLevel, fbW, fbH);
+        
+        // 프레임 카운터 (주기적으로 통계 출력)
+        if (++frameCount % 60 == 0) {
+            spdlog::debug("Frame {}: rendered {} tiles, cache: {} MB / {} MB", 
+                frameCount, tilesRendered,
+                texCache.usedBytes() / (1024 * 1024),
+                texCache.budgetBytes() / (1024 * 1024));
+        }
 
         gl.endFrame();
     }
@@ -408,7 +417,7 @@ void RunTileRenderDemo()
     // 9) 리소스 정리
     spdlog::info("Shutting down...");
     inputHandler.detach();
-    texMgr.destroy(tex);
+    texCache.clear();
     quadRenderer.shutdown();
     gl.shutdown();
     

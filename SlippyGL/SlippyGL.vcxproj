@@ -152,6 +152,8 @@
     <ClCompile Include="src\render\QuadRenderer.cpp" />
     <ClCompile Include="src\render\TextureManager.cpp" />
     <ClCompile Include="src\tile\TileDownloader.cpp" />
+    <ClCompile Include="src\tile\TileCache.cpp" />
+    <ClCompile Include="src\tile\TileRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\cache\CacheTypes.hpp" />
@@ -170,6 +172,10 @@
     <ClInclude Include="src\render\QuadRenderer.hpp" />
     <ClInclude Include="src\render\TextureManager.hpp" />
     <ClInclude Include="src\tile\TileDownloader.hpp" />
+    <ClInclude Include="src\tile\TileKey.hpp" />
+    <ClInclude Include="src\tile\TileGrid.hpp" />
+    <ClInclude Include="src\tile\TileCache.hpp" />
+    <ClInclude Include="src\tile\TileRenderer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
