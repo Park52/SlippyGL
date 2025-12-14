@@ -87,6 +87,16 @@ namespace slippygl::render
          */
         glm::mat4 mvp(int fbW, int fbH) const noexcept;
 
+        /**
+         * Set world origin (for initial positioning)
+         * @param origin World coordinates to show at screen top-left
+         */
+        void setWorldOrigin(const glm::vec2& origin) noexcept
+        {
+            worldOriginX_ = origin.x;
+            worldOriginY_ = origin.y;
+        }
+
         // Configuration
         static constexpr float kMinScale = 0.25f;
         static constexpr float kMaxScale = 8.0f;
