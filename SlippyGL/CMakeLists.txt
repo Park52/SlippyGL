@@ -18,7 +18,6 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad   CONFIG REQUIRED)
 find_package(CURL   CONFIG REQUIRED)          # CURL::libcurl
 find_package(spdlog CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
 
 # ---- Vendored header-only (submodules / copied) ----
 # 이 CMakeLists.txt는 SlippyGL/ 에 있으므로, include 경로는 ../external/ 로 올라감
@@ -50,7 +49,6 @@ target_link_libraries(SlippyGL PRIVATE
   glad::glad
   CURL::libcurl
   spdlog::spdlog
-  nlohmann_json::nlohmann_json
   glm::glm
   stb::stb
 )
