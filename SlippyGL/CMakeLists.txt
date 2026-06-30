@@ -72,7 +72,9 @@ endif()
 
 # ---- Warnings / nice defaults ----
 if (MSVC)
-  target_compile_options(SlippyGL PRIVATE /W4 /permissive-)
+  # /utf-8: source/exec charset UTF-8 (Korean comments are UTF-8 w/o BOM;
+  # without this MSVC reads them as the system code page and mis-tokenizes).
+  target_compile_options(SlippyGL PRIVATE /W4 /permissive- /utf-8)
 else()
   target_compile_options(SlippyGL PRIVATE -Wall -Wextra -Wpedantic)
 endif()

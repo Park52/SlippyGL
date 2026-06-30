@@ -1,11 +1,7 @@
 ﻿#include "PngCodec.hpp"
 
-// STB Image library configuration (must be before include)
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_NO_STDIO          // Disable file I/O (memory only)
-#define STBI_ONLY_PNG          // PNG only
-
-// vcpkg stb package uses this path
+// stb_image declarations only. The single implementation translation unit is
+// external/stb_image_impl.cpp (defines STB_IMAGE_IMPLEMENTATION there).
 #include <stb_image.h>
 
 namespace slippygl::decode
