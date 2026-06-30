@@ -34,7 +34,7 @@ void RunTileRenderDemo()
 
     // 1) OpenGL 컨텍스트/윈도우 초기화
     render::GlBootstrap gl;
-    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Multi-Tile Render (Drag=Pan, Scroll=Zoom, R=Reset, F3=Debug)" };
+    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Multi-Tile Render (WASD/Drag=Pan, Scroll=Zoom, R=Reset, F3=Debug)" };
 
     if (!gl.init(winCfg)) {
         spdlog::error("OpenGL initialization failed");
@@ -95,7 +95,7 @@ void RunTileRenderDemo()
 
     // 8) 렌더 루프
     spdlog::info("Entering render loop");
-    spdlog::info("Controls: Drag=Pan, Scroll=Zoom, R=Reset, F3=Debug overlay, ESC=Exit");
+    spdlog::info("Controls: WASD/Arrows or Drag=Pan, Scroll=Zoom, R=Reset, F3=Debug overlay, ESC=Exit");
     spdlog::info("Visible tiles will be loaded dynamically");
 
     int frameCount = 0;
@@ -103,6 +103,10 @@ void RunTileRenderDemo()
 
     while (!gl.shouldClose()) {
         gl.poll();
+
+        // WASD(+방향키) 패닝 — 부드러운 가속/감속
+        inputHandler.update();
+
         gl.beginFrame(0.2f, 0.2f, 0.3f);  // 진한 파란색 배경
 
         // 프레임버퍼 크기 가져오기
