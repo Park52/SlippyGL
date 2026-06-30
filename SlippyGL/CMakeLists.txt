@@ -84,3 +84,26 @@ option(SLIPPYGL_ENABLE_GL_DEBUG "Enable OpenGL debug output in Debug builds" ON)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND SLIPPYGL_ENABLE_GL_DEBUG)
   target_compile_definitions(SlippyGL PRIVATE SLIPPYGL_GL_DEBUG)
 endif()
+
+# ---- Unit tests (CTest) ----
+# Pure-logic tests (coordinate math, visible-tile range, camera). No GL/network,
+# so they link only the relevant production sources + glm (header-only).
+option(SLIPPYGL_BUILD_TESTS "Build unit tests" ON)
+if (SLIPPYGL_BUILD_TESTS)
+  enable_testing()
+
+  file(GLOB SLIPPYGL_TEST_SRC ${CMAKE_CURRENT_LIST_DIR}/tests/*.cpp)
+  add_executable(slippygl_tests
+    ${SLIPPYGL_TEST_SRC}
+    ${CMAKE_CURRENT_LIST_DIR}/src/render/Camera2D.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/core/Types.cpp
+  )
+  target_include_directories(slippygl_tests PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src)
+  target_link_libraries(slippygl_tests PRIVATE glm::glm)
+
+  if (MSVC)
+    target_compile_options(slippygl_tests PRIVATE /utf-8)
+  endif()
+
+  add_test(NAME slippygl_tests COMMAND slippygl_tests)
+endif()
