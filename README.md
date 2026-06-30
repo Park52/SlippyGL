@@ -1,5 +1,7 @@
 # SlippyGL
 
+[![CI](https://github.com/Park52/SlippyGL/actions/workflows/ci.yml/badge.svg)](https://github.com/Park52/SlippyGL/actions/workflows/ci.yml)
+
 OpenGL 기반 **slippy map 뷰어**. [OpenStreetMap](https://www.openstreetmap.org/) 래스터 타일(PNG)을
 view-driven 방식으로 내려받아 실시간 렌더링하는 C++17 프로젝트입니다.
 학습·포트폴리오 목적이며, 기능을 점진적으로 확장하기 쉬운 모듈 구조를 지향합니다.
