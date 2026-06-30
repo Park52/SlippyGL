@@ -22,11 +22,11 @@
     <Filter Include="Source Files\core">
       <UniqueIdentifier>{1978f929-36de-47fb-b7a2-b95989a153c4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\cache">
-      <UniqueIdentifier>{8f3a5a4e-adbf-4953-a47b-37acf7f4e2ae}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\tile">
       <UniqueIdentifier>{bb96faed-2b7d-4d74-b52c-129c46463e5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\render">
+      <UniqueIdentifier>{c1a7d2e4-9f3b-4a6c-8d12-7e5b6a4c3f10}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -48,14 +48,11 @@
     <ClCompile Include="src\app\SlippyGL.cpp">
       <Filter>Source Files\app</Filter>
     </ClCompile>
-    <ClCompile Include="src\cache\CacheTypes.cpp">
-      <Filter>Source Files\cache</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cache\DiskCache.cpp">
-      <Filter>Source Files\cache</Filter>
-    </ClCompile>
     <ClCompile Include="src\tile\TileDownloader.cpp">
       <Filter>Source Files\tile</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\TextRenderer.cpp">
+      <Filter>Source Files\render</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,14 +74,11 @@
     <ClInclude Include="src\net\TileEndpoint.hpp">
       <Filter>Source Files\net</Filter>
     </ClInclude>
-    <ClInclude Include="src\cache\DiskCache.hpp">
-      <Filter>Source Files\cache</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cache\CacheTypes.hpp">
-      <Filter>Source Files\cache</Filter>
-    </ClInclude>
     <ClInclude Include="src\tile\TileDownloader.hpp">
       <Filter>Source Files\tile</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\TextRenderer.hpp">
+      <Filter>Source Files\render</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

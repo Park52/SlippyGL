@@ -35,9 +35,21 @@ namespace slippygl::render
         void detach();
 
         /**
+         * Per-frame update: WASD (+arrow keys) panning with smooth
+         * acceleration/deceleration. Call once per frame after poll().
+         * Computes its own delta time via glfwGetTime().
+         */
+        void update();
+
+        /**
          * Check if attached
          */
         bool isAttached() const noexcept { return window_ != nullptr; }
+
+        /**
+         * Debug overlay (tile borders + z/x/y) toggle state. Toggled by F3.
+         */
+        bool debugMode() const noexcept { return debugMode_; }
 
         // For access in static callbacks
         static InputHandler* getHandler(GLFWwindow* window);
@@ -50,6 +62,14 @@ namespace slippygl::render
         bool isDragging_ = false;
         double lastMouseX_ = 0.0;
         double lastMouseY_ = 0.0;
+
+        // Debug overlay toggle (F3)
+        bool debugMode_ = false;
+
+        // WASD panning state (smooth accel/decel)
+        double lastUpdateTime_ = 0.0;  // glfwGetTime() of last update()
+        float panVelX_ = 0.0f;         // current pan velocity (screen px/sec)
+        float panVelY_ = 0.0f;
 
         // GLFW callback handlers
         static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
