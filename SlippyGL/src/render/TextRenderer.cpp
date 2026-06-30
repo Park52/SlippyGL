@@ -374,39 +374,75 @@ void TextRenderer::drawRect(float x, float y, float w, float h,
     uploadAndDraw(verts, color, /*solid*/true, fbW, fbH);
 }
 
+void TextRenderer::drawRectOutline(float x, float y, float w, float h, float thickness,
+                                   const glm::vec4& color, int fbW, int fbH)
+{
+    if (!ready() || w <= 0 || h <= 0) return;
+    const float t = thickness;
+    drawRect(x,         y,         w, t,         color, fbW, fbH); // top
+    drawRect(x,         y + h - t, w, t,         color, fbW, fbH); // bottom
+    drawRect(x,         y,         t, h,         color, fbW, fbH); // left
+    drawRect(x + w - t, y,         t, h,         color, fbW, fbH); // right
+}
+
+bool TextRenderer::measure(const std::string& utf8, float& outW, float& outH) const
+{
+    if (!ready()) return false;
+    const auto cps = decodeUtf8(utf8);
+    std::vector<Vert> probe;
+    glm::vec4 bbox(0.0f);
+    buildQuads(cps, 0.0f, 0.0f, probe, bbox);
+    outW = bbox.z - bbox.x;
+    outH = bbox.w - bbox.y;
+    return true;
+}
+
+void TextRenderer::drawTextBoxed(const std::string& utf8, float tlx, float tly,
+                                 const glm::vec4& textColor, const glm::vec4& bgColor,
+                                 float pad, int fbW, int fbH)
+{
+    if (!ready()) return;
+    const auto cps = decodeUtf8(utf8);
+
+    // 베이스라인 (0,0) 기준 bbox로 크기/오프셋 계산
+    std::vector<Vert> probe;
+    glm::vec4 bbox(0.0f);
+    buildQuads(cps, 0.0f, 0.0f, probe, bbox);
+    const float w = bbox.z - bbox.x;
+    const float h = bbox.w - bbox.y;
+
+    if (bgColor.a > 0.0f) {
+        drawRect(tlx, tly, w + 2.0f * pad, h + 2.0f * pad, bgColor, fbW, fbH);
+    }
+
+    // 텍스트 bbox의 top-left이 (tlx+pad, tly+pad)에 오도록 베이스라인 원점 보정
+    const float originX = (tlx + pad) - bbox.x;
+    const float originY = (tly + pad) - bbox.y;
+
+    std::vector<Vert> verts;
+    glm::vec4 ignore(0.0f);
+    buildQuads(cps, originX, originY, verts, ignore);
+    uploadAndDraw(verts, textColor, /*solid*/false, fbW, fbH);
+}
+
 void TextRenderer::drawAttribution(int fbW, int fbH)
 {
     if (!ready() || fbW <= 0 || fbH <= 0) return;
 
     static const std::string kText = "\xC2\xA9 OpenStreetMap contributors"; // "© ..."
-    const auto cps = decodeUtf8(kText);
 
-    // 1) 측정: 베이스라인 (0,0) 기준 bbox 계산
-    std::vector<Vert> probe;
-    glm::vec4 bbox(0.0f);
-    buildQuads(cps, 0.0f, 0.0f, probe, bbox);
-    const float textW = bbox.z - bbox.x;
-    const float textH = bbox.w - bbox.y;
+    float textW = 0.0f, textH = 0.0f;
+    if (!measure(kText, textW, textH)) return;
 
-    // 2) 우하단 배치 좌표 계산
     constexpr float margin = 10.0f;
     constexpr float pad = 5.0f;
     const float boxX = static_cast<float>(fbW) - textW - margin - 2.0f * pad;
     const float boxY = static_cast<float>(fbH) - textH - margin - 2.0f * pad;
 
-    // 텍스트 bbox의 top-left이 (boxX+pad, boxY+pad)에 오도록 베이스라인 원점 보정
-    const float originX = (boxX + pad) - bbox.x;
-    const float originY = (boxY + pad) - bbox.y;
-
-    // 3) 반투명 배경 바
-    drawRect(boxX, boxY, textW + 2.0f * pad, textH + 2.0f * pad,
-             glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), fbW, fbH);
-
-    // 4) 흰색 텍스트
-    std::vector<Vert> verts;
-    glm::vec4 ignore(0.0f);
-    buildQuads(cps, originX, originY, verts, ignore);
-    uploadAndDraw(verts, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), /*solid*/false, fbW, fbH);
+    drawTextBoxed(kText, boxX, boxY,
+                  glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),  // 흰 텍스트
+                  glm::vec4(0.0f, 0.0f, 0.0f, 0.5f),  // 반투명 검정 배경
+                  pad, fbW, fbH);
 }
 
 } // namespace slippygl::render

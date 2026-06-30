@@ -102,6 +102,44 @@ int TileRenderer::drawTiles(
     return lastTileCount_;
 }
 
+void TileRenderer::drawDebugOverlay(
+    render::TextRenderer& text,
+    const render::Camera2D& camera,
+    int zoom,
+    int fbW, int fbH)
+{
+    if (!text.ready()) return;
+
+    const auto range = TileGrid::computeVisibleRange(camera, fbW, fbH, zoom);
+
+    const glm::vec4 borderColor(1.0f, 1.0f, 0.0f, 0.6f);  // 반투명 노랑
+    const glm::vec4 labelColor (1.0f, 1.0f, 0.2f, 1.0f);  // 밝은 노랑 텍스트
+    const glm::vec4 labelBg    (0.0f, 0.0f, 0.0f, 0.55f); // 어두운 배경(가독성)
+
+    for (int y = range.minY; y <= range.maxY; ++y)
+    {
+        for (int x = range.minX; x <= range.maxX; ++x)
+        {
+            const TileKey key(zoom, x, y);
+            const glm::vec2 wpos = TileGrid::tileWorldPosition(key);
+
+            // 타일 코너를 화면 좌표로 투영 (축 정렬 사각형)
+            const glm::vec2 tl = camera.worldToScreen(wpos.x, wpos.y);
+            const glm::vec2 br = camera.worldToScreen(
+                wpos.x + kTileSizePx, wpos.y + kTileSizePx);
+            const float sw = br.x - tl.x;
+            const float sh = br.y - tl.y;
+
+            // 타일 경계선
+            text.drawRectOutline(tl.x, tl.y, sw, sh, 1.0f, borderColor, fbW, fbH);
+
+            // z/x/y 라벨 (좌상단에서 약간 안쪽, 고정 화면 크기)
+            text.drawTextBoxed(key.toString(), tl.x + 3.0f, tl.y + 3.0f,
+                               labelColor, labelBg, 2.0f, fbW, fbH);
+        }
+    }
+}
+
 render::TexHandle TileRenderer::getOrLoadTexture(const TileKey& key)
 {
     // 이 함수는 캐시 미스 시에만 호출됨 (drawTiles에서 이미 확인)

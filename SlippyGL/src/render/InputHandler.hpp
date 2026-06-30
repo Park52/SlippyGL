@@ -39,6 +39,11 @@ namespace slippygl::render
          */
         bool isAttached() const noexcept { return window_ != nullptr; }
 
+        /**
+         * Debug overlay (tile borders + z/x/y) toggle state. Toggled by F3.
+         */
+        bool debugMode() const noexcept { return debugMode_; }
+
         // For access in static callbacks
         static InputHandler* getHandler(GLFWwindow* window);
 
@@ -50,6 +55,9 @@ namespace slippygl::render
         bool isDragging_ = false;
         double lastMouseX_ = 0.0;
         double lastMouseY_ = 0.0;
+
+        // Debug overlay toggle (F3)
+        bool debugMode_ = false;
 
         // GLFW callback handlers
         static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);

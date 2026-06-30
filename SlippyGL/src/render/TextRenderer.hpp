@@ -46,6 +46,21 @@ namespace slippygl::render
         void drawRect(float x, float y, float w, float h,
                       const glm::vec4& color, int fbW, int fbH);
 
+        /** 사각형 외곽선(두께 thickness px)을 그린다. 타일 경계선 등. */
+        void drawRectOutline(float x, float y, float w, float h, float thickness,
+                             const glm::vec4& color, int fbW, int fbH);
+
+        /**
+         * (tlx, tly)를 텍스트 박스의 top-left로 삼아, 반투명 배경(bgColor.a>0일 때)과
+         * 텍스트를 함께 그린다. 베이스라인 보정은 내부에서 처리한다.
+         */
+        void drawTextBoxed(const std::string& utf8, float tlx, float tly,
+                           const glm::vec4& textColor, const glm::vec4& bgColor,
+                           float pad, int fbW, int fbH);
+
+        /** 텍스트 픽셀 크기(폭/높이)를 측정한다. 미초기화면 false. */
+        bool measure(const std::string& utf8, float& outW, float& outH) const;
+
         /**
          * `© OpenStreetMap contributors`를 화면 우하단에 반투명 배경과 함께 상시 표시.
          * (OSM 타일 정책 필수: 저작자 표시)

@@ -6,6 +6,7 @@
 #include "TileDownloader.hpp"
 #include "../render/Camera2D.hpp"
 #include "../render/QuadRenderer.hpp"
+#include "../render/TextRenderer.hpp"
 #include "../render/TextureManager.hpp"
 #include "../decode/PngCodec.hpp"
 #include "../decode/Image.hpp"
@@ -48,6 +49,18 @@ namespace slippygl::tile
          */
         int drawTiles(
             render::QuadRenderer& quadRenderer,
+            const render::Camera2D& camera,
+            int zoom,
+            int fbW, int fbH);
+
+        /**
+         * Draw debug overlay for the current view: tile borders + z/x/y labels.
+         * Screen-space (fixed-size text), projected via camera.worldToScreen().
+         * No tile loading/downloading happens here.
+         * @param text Text renderer (reused; not stored)
+         */
+        void drawDebugOverlay(
+            render::TextRenderer& text,
             const render::Camera2D& camera,
             int zoom,
             int fbW, int fbH);

@@ -161,6 +161,11 @@ void InputHandler::onKey(int key, int scancode, int action, int mods)
         camera_->reset();
         spdlog::info("Camera reset");
     }
+    else if (key == GLFW_KEY_F3) {
+        // Toggle debug overlay (tile borders + z/x/y)
+        debugMode_ = !debugMode_;
+        spdlog::info("Debug overlay: {}", debugMode_ ? "ON" : "OFF");
+    }
     // Note: ESC handling is done in GlBootstrap::poll()
 }
 

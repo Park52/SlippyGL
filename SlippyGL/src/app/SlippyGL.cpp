@@ -34,7 +34,7 @@ void RunTileRenderDemo()
 
     // 1) OpenGL 컨텍스트/윈도우 초기화
     render::GlBootstrap gl;
-    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Multi-Tile Render (Drag=Pan, Scroll=Zoom, R=Reset)" };
+    render::WindowConfig winCfg{ 800, 600, "SlippyGL - Multi-Tile Render (Drag=Pan, Scroll=Zoom, R=Reset, F3=Debug)" };
 
     if (!gl.init(winCfg)) {
         spdlog::error("OpenGL initialization failed");
@@ -95,7 +95,7 @@ void RunTileRenderDemo()
 
     // 8) 렌더 루프
     spdlog::info("Entering render loop");
-    spdlog::info("Controls: Drag=Pan, Scroll=Zoom, R=Reset, ESC=Exit");
+    spdlog::info("Controls: Drag=Pan, Scroll=Zoom, R=Reset, F3=Debug overlay, ESC=Exit");
     spdlog::info("Visible tiles will be loaded dynamically");
 
     int frameCount = 0;
@@ -135,7 +135,12 @@ void RunTileRenderDemo()
         // TileRenderer로 화면에 보이는 모든 타일 렌더링
         const int tilesRendered = tileRenderer.drawTiles(quadRenderer, camera, zoomLevel, fbW, fbH);
 
-        // 저작자 표시(우하단 상시 노출) — 타일 위에 그린다
+        // 디버그 오버레이(F3 토글): 타일 경계 + z/x/y
+        if (inputHandler.debugMode()) {
+            tileRenderer.drawDebugOverlay(overlay, camera, zoomLevel, fbW, fbH);
+        }
+
+        // 저작자 표시(우하단 상시 노출) — 항상 최상단에 그린다
         overlay.drawAttribution(fbW, fbH);
 
         // 프레임 카운터 (주기적으로 통계 출력)
