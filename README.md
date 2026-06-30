@@ -6,9 +6,10 @@ OpenGL 기반 **slippy map 뷰어**. [OpenStreetMap](https://www.openstreetmap.o
 view-driven 방식으로 내려받아 실시간 렌더링하는 C++17 프로젝트입니다.
 학습·포트폴리오 목적이며, 기능을 점진적으로 확장하기 쉬운 모듈 구조를 지향합니다.
 
-![SlippyGL 데모](docs/images/screenshot.png)
+![SlippyGL 데모](docs/images/demo.gif)
 
-> 서울·경기 일대를 줌 레벨 12로 렌더링한 모습. 우하단에 `© OpenStreetMap contributors` 상시 표시.
+> WASD 패닝 · 스크롤 줌 · F3 디버그 오버레이. 우하단에 `© OpenStreetMap contributors` 상시 표시.
+> ([정지 스크린샷](docs/images/screenshot.png))
 
 ---
 
@@ -148,5 +149,5 @@ SlippyGL/
 
 ## 📜 라이선스
 
-- **코드:** MIT License
+- **코드:** [MIT License](LICENSE)
 - **지도 데이터/타일:** © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL)
