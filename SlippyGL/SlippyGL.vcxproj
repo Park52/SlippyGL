@@ -148,6 +148,7 @@
     <ClCompile Include="src\render\GlBootstrap.cpp" />
     <ClCompile Include="src\render\InputHandler.cpp" />
     <ClCompile Include="src\render\QuadRenderer.cpp" />
+    <ClCompile Include="src\render\TextRenderer.cpp" />
     <ClCompile Include="src\render\TextureManager.cpp" />
     <ClCompile Include="src\tile\TileDownloader.cpp" />
     <ClCompile Include="src\tile\TileCache.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="src\render\GlBootstrap.hpp" />
     <ClInclude Include="src\render\InputHandler.hpp" />
     <ClInclude Include="src\render\QuadRenderer.hpp" />
+    <ClInclude Include="src\render\TextRenderer.hpp" />
     <ClInclude Include="src\render\TextureManager.hpp" />
     <ClInclude Include="src\tile\TileDownloader.hpp" />
     <ClInclude Include="src\tile\TileKey.hpp" />

@@ -25,6 +25,9 @@
     <Filter Include="Source Files\tile">
       <UniqueIdentifier>{bb96faed-2b7d-4d74-b52c-129c46463e5a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\render">
+      <UniqueIdentifier>{c1a7d2e4-9f3b-4a6c-8d12-7e5b6a4c3f10}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Types.cpp">
@@ -48,6 +51,9 @@
     <ClCompile Include="src\tile\TileDownloader.cpp">
       <Filter>Source Files\tile</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\TextRenderer.cpp">
+      <Filter>Source Files\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\TileMath.hpp">
@@ -70,6 +76,9 @@
     </ClInclude>
     <ClInclude Include="src\tile\TileDownloader.hpp">
       <Filter>Source Files\tile</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\TextRenderer.hpp">
+      <Filter>Source Files\render</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

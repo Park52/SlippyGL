@@ -10,6 +10,7 @@
 #include "render/GlBootstrap.hpp"
 #include "render/TextureManager.hpp"
 #include "render/QuadRenderer.hpp"
+#include "render/TextRenderer.hpp"
 #include "render/Camera2D.hpp"
 #include "render/InputHandler.hpp"
 #include "tile/TileCache.hpp"
@@ -47,6 +48,12 @@ void RunTileRenderDemo()
     if (!quadRenderer.init()) {
         spdlog::error("QuadRenderer initialization failed");
         return;
+    }
+
+    // 저작자 표시 오버레이 (OSM 정책 필수). 폰트 로드 실패해도 앱은 계속 동작.
+    render::TextRenderer overlay;
+    if (!overlay.init()) {
+        spdlog::warn("Attribution overlay disabled (no font); continuing without it");
     }
 
     // 3) 카메라 및 입력 핸들러 초기화
@@ -128,6 +135,9 @@ void RunTileRenderDemo()
         // TileRenderer로 화면에 보이는 모든 타일 렌더링
         const int tilesRendered = tileRenderer.drawTiles(quadRenderer, camera, zoomLevel, fbW, fbH);
 
+        // 저작자 표시(우하단 상시 노출) — 타일 위에 그린다
+        overlay.drawAttribution(fbW, fbH);
+
         // 프레임 카운터 (주기적으로 통계 출력)
         if (++frameCount % 60 == 0) {
             spdlog::debug("Frame {}: rendered {} tiles, cache: {} MB / {} MB",
@@ -143,6 +153,7 @@ void RunTileRenderDemo()
     spdlog::info("Shutting down...");
     inputHandler.detach();
     texCache.clear();
+    overlay.shutdown();
     quadRenderer.shutdown();
     gl.shutdown();
 
