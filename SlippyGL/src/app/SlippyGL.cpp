@@ -99,7 +99,8 @@ void RunTileRenderDemo()
     spdlog::info("Visible tiles will be loaded dynamically");
 
     int frameCount = 0;
-    int lastZoomLevel = initialZoom;
+    int tileZoom = initialZoom;       // 현재 타일 줌 레벨(프레임 간 유지되는 상태)
+    int lastZoomLevel = initialZoom;  // 로그 출력용 직전 값
 
     while (!gl.shouldClose()) {
         gl.poll();
@@ -113,35 +114,34 @@ void RunTileRenderDemo()
         const int fbW = gl.width();
         const int fbH = gl.height();
 
-        // 카메라 스케일 -> 줌 레벨 계산
-        // scale 1.0 = 기본 줌 레벨, 0.5 = 줌 아웃, 2.0 = 줌 인
-        const float scale = camera.scale();
-        int zoomLevel = initialZoom;
-
-        // 스케일에 따른 줌 레벨 조정 (대략적 로그 스케일)
-        if (scale < 0.5f) {
-            zoomLevel = std::max(0, initialZoom - 2);
-        } else if (scale < 0.75f) {
-            zoomLevel = std::max(0, initialZoom - 1);
-        } else if (scale > 2.0f) {
-            zoomLevel = std::min(19, initialZoom + 2);
-        } else if (scale > 1.5f) {
-            zoomLevel = std::min(19, initialZoom + 1);
+        // 카메라 스케일이 임계치를 넘으면 타일 줌 레벨을 한 단계 바꾸고
+        // 카메라 좌표계를 재매핑한다(화면 뷰는 그대로 보존). 월드 픽셀 좌표계가
+        // 항상 현재 타일 줌과 일치하도록 유지해야 타일이 정상 표시된다.
+        // (scale이 두 배가 되면 한 레벨 인, 절반이 되면 한 레벨 아웃)
+        constexpr int kMinZoom = 0;
+        constexpr int kMaxZoom = 19;
+        while (camera.scale() > 2.0f && tileZoom < kMaxZoom) {
+            ++tileZoom;
+            camera.applyZoomStep(2.0f);   // worldOrigin*2, scale/2
+        }
+        while (camera.scale() < 0.5f && tileZoom > kMinZoom) {
+            --tileZoom;
+            camera.applyZoomStep(0.5f);   // worldOrigin/2, scale*2
         }
 
         // 줌 레벨이 바뀌면 로그 출력
-        if (zoomLevel != lastZoomLevel) {
-            spdlog::info("Zoom level changed: {} -> {} (scale: {:.2f})",
-                lastZoomLevel, zoomLevel, scale);
-            lastZoomLevel = zoomLevel;
+        if (tileZoom != lastZoomLevel) {
+            spdlog::info("Tile zoom level: {} -> {} (scale: {:.2f})",
+                lastZoomLevel, tileZoom, camera.scale());
+            lastZoomLevel = tileZoom;
         }
 
         // TileRenderer로 화면에 보이는 모든 타일 렌더링
-        const int tilesRendered = tileRenderer.drawTiles(quadRenderer, camera, zoomLevel, fbW, fbH);
+        const int tilesRendered = tileRenderer.drawTiles(quadRenderer, camera, tileZoom, fbW, fbH);
 
         // 디버그 오버레이(F3 토글): 타일 경계 + z/x/y
         if (inputHandler.debugMode()) {
-            tileRenderer.drawDebugOverlay(overlay, camera, zoomLevel, fbW, fbH);
+            tileRenderer.drawDebugOverlay(overlay, camera, tileZoom, fbW, fbH);
         }
 
         // 저작자 표시(우하단 상시 노출) — 항상 최상단에 그린다

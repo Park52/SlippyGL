@@ -44,6 +44,19 @@ namespace slippygl::render
         void reset() noexcept;
 
         /**
+         * Remap the world frame when the discrete tile zoom level changes.
+         *
+         * "World pixels" are tile-index * tileSize, so the space doubles per
+         * zoom level. When the active tile zoom changes by delta levels, call
+         * this with factor = 2^delta (zoom in) or 2^-delta (zoom out). It scales
+         * worldOrigin by factor and scale by 1/factor, which keeps every point's
+         * on-screen position identical across the level switch (so the view does
+         * not jump) while making tile world positions consistent with the new
+         * zoom level.
+         */
+        void applyZoomStep(float factor) noexcept;
+
+        /**
          * Get current scale
          */
         float scale() const noexcept { return scale_; }
