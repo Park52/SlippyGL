@@ -68,17 +68,18 @@ namespace slippygl::tile
             );
 
             // World pixels to tile indices
-            range.minX = TileCoord::worldPxToTileIndex(topLeft.x, tileSizePx);
-            range.maxX = TileCoord::worldPxToTileIndex(bottomRight.x, tileSizePx);
-            range.minY = TileCoord::worldPxToTileIndex(topLeft.y, tileSizePx);
-            range.maxY = TileCoord::worldPxToTileIndex(bottomRight.y, tileSizePx);
+            const int rawMinX = TileCoord::worldPxToTileIndex(topLeft.x, tileSizePx);
+            const int rawMaxX = TileCoord::worldPxToTileIndex(bottomRight.x, tileSizePx);
+            const int rawMinY = TileCoord::worldPxToTileIndex(topLeft.y, tileSizePx);
+            const int rawMaxY = TileCoord::worldPxToTileIndex(bottomRight.y, tileSizePx);
 
-            // Clamp to valid tile range (no wrapping for now)
-            const int maxIdx = (1 << zoom) - 1;
-            range.minX = std::max(0, range.minX);
-            range.maxX = std::min(maxIdx, range.maxX);
-            range.minY = std::max(0, range.minY);
-            range.maxY = std::min(maxIdx, range.maxY);
+            // Clamp every index to [0, 2^zoom - 1]. Clamping BOTH ends (not just
+            // min-with-0 and max-with-maxIdx) prevents an inverted minX>maxX
+            // range, which would silently render zero tiles. (no wrapping yet)
+            range.minX = TileCoord::clampTileIndex(rawMinX, zoom);
+            range.maxX = TileCoord::clampTileIndex(rawMaxX, zoom);
+            range.minY = TileCoord::clampTileIndex(rawMinY, zoom);
+            range.maxY = TileCoord::clampTileIndex(rawMaxY, zoom);
 
             return range;
         }

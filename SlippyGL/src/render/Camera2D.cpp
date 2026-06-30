@@ -44,6 +44,18 @@ void Camera2D::reset() noexcept
     scale_ = 1.0f;
 }
 
+void Camera2D::applyZoomStep(float factor) noexcept
+{
+    // worldOrigin *= factor, scale /= factor preserves the on-screen mapping:
+    //   screen = (world - origin) * scale
+    // After world' = world*factor, origin' = origin*factor, scale' = scale/factor:
+    //   screen' = (world*factor - origin*factor) * (scale/factor)
+    //           = (world - origin) * scale = screen   (unchanged)
+    worldOriginX_ *= factor;
+    worldOriginY_ *= factor;
+    scale_ /= factor;
+}
+
 glm::vec2 Camera2D::screenToWorld(float sx, float sy) const noexcept
 {
     // Screen coordinate to world coordinate
