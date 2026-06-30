@@ -5,9 +5,6 @@
     "glfw3",
     "glad",
     "spdlog",
-
-    { "name": "curl", "default-features": false, "features": ["schannel"], "platform": "windows" },
-    { "name": "curl", "default-features": false, "features": ["openssl"], "platform": "!windows" },
-    { "name": "openssl", "platform": "!windows" }
+    "curl"
   ]
 }
